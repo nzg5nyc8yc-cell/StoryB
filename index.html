@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Story Canvas</title>
+  <style>
+:root {
+      --bg: #ece9e2;
+      --paper: #fffefb;
+      --ink: #24231f;
+      --muted: #77736a;
+      --line: #d9d4ca;
+      --accent: #3858d6;
+      --accent-soft: #e9edff;
+      --danger: #b93838;
+      --panel: #f7f5f0;
+      --shadow: 0 14px 40px rgba(38, 35, 27, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;
+    }
+
+    .topbar {
+      min-height: 58px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 170px;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(145deg, #2e49bd, #6a7ef0);
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(56, 88, 214, .25);
+    }
+
+    .brand-name { font-weight: 800; letter-spacing: -.02em; }
+    .brand-sub { display: block; margin-top: 1px; color: var(--muted); font-size: 11px; font-weight: 500; }
+
+    .title-input {
+      flex: 1;
+      min-width: 150px;
+      max-width: 540px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: transparent;
+      font-size: 16px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .title-input:hover, .title-input:focus { border-color: var(--line); background: white; }
+
+    .top-actions { margin-left: auto; display: flex; gap: 7px; align-items: center; }
+
+    .toolbar {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+      z-index: 10;
+    }
+
+    .tool-group { display: flex; align-items: center; gap: 4px; }
+    .divider { width: 1px; height: 24px; margin: 0 4px; background: var(--line); flex: 0 0 auto; }
+
+    .btn, .icon-btn, .select {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: .16s ease;
+    }
+
+    .btn { padding: 0 12px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .icon-btn { min-width: 34px; padding: 0 8px; font-weight: 800; }
+    .select { padding: 0 8px; outline: none; }
+    .btn:hover, .icon-btn:hover, .select:hover { border-color: #aaa49a; transform: translateY(-1px); }
+    .btn.primary { color: white; background: var(--accent); border-color: var(--accent); }
+    .btn.soft { color: var(--accent); background: var(--accent-soft); border-color: #ccd4ff; }
+    .btn.danger { color: var(--danger); }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 232px minmax(520px, 1fr) 250px;
+    }
+
+    .sidebar, .inspector {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+      background: var(--panel);
+    }
+
+    .sidebar { border-right: 1px solid var(--line); }
+    .inspector { border-left: 1px solid var(--line); }
+
+    .panel-title {
+      margin: 2px 0 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .insert-list { display: grid; gap: 8px; }
+    .insert-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+    }
+    .insert-card:hover { border-color: var(--accent); box-shadow: 0 5px 18px rgba(56,88,214,.09); }
+    .insert-icon { width: 36px; height: 36px; border-radius: 9px; display:grid; place-items:center; background: var(--accent-soft); color: var(--accent); font-size: 18px; font-weight: 800; }
+    .insert-card strong { display: block; font-size: 13px; }
+    .insert-card span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+
+    .side-section { margin-top: 24px; }
+    .tip {
+      padding: 12px;
+      border-radius: 10px;
+      background: #fff9df;
+      border: 1px solid #eadf9b;
+      color: #665b22;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .canvas-wrap {
+      min-width: 0;
+      overflow: auto;
+      padding: 34px 28px 90px;
+      scroll-behavior: smooth;
+    }
+
+    .paper {
+      width: min(820px, 100%);
+      min-height: 1120px;
+      margin: 0 auto;
+      padding: 72px 76px 100px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      border: 1px solid #ded9cf;
+      position: relative;
+    }
+
+    .paper.storyboard-view {
+      width: min(980px, 100%);
+      padding: 48px;
+      background: #f1f0ec;
+    }
+
+    .document-heading { margin-bottom: 36px; }
+    .document-title {
+      margin: 0;
+      padding: 3px 5px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      font-family: inherit;
+      font-size: 34px;
+      letter-spacing: -.035em;
+      line-height: 1.25;
+      outline: none;
+    }
+    .document-title:hover, .document-title:focus { border-color: var(--line); background: rgba(255,255,255,.72); }
+    .document-title:empty::before { content: attr(data-placeholder); color: #aaa59a; }
+    .document-meta { margin-top: 10px; color: var(--muted); font-size: 12px; }
+
+    #blocks {
+      display: grid;
+      grid-template-columns: repeat(20, minmax(0, 1fr));
+      grid-auto-flow: row dense;
+      align-items: start;
+      gap: 14px;
+    }
+    .text-block, .scene-block { grid-column: 1 / -1; }
+
+    .block {
+      position: relative;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      transition: .12s ease;
+    }
+
+    .block:hover { border-color: #dfdbd2; }
+    .block.selected { border-color: #aab8ff; box-shadow: 0 0 0 3px rgba(56,88,214,.08); }
+    .block.dragging { opacity: .45; }
+    .block.drop-before::before, .block.drop-after::after,
+    .block.drop-left::before, .block.drop-right::after {
+      content: "";
+      position: absolute;
+      border-radius: 3px;
+      background: var(--accent);
+      z-index: 12;
+      pointer-events: none;
+    }
+    .block.drop-before::before, .block.drop-after::after {
+      left: 0; right: 0;
+      height: 3px;
+    }
+    .block.drop-before::before { top: -8px; }
+    .block.drop-after::after { bottom: -8px; }
+    .block.drop-left::before, .block.drop-right::after {
+      top: 0; bottom: 0;
+      width: 4px;
+    }
+    .block.drop-left::before { left: -9px; }
+    .block.drop-right::after { right: -9px; }
+
+    .block-tools {
+      position: absolute;
+      left: -46px;
+      top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      opacity: 0;
+      transition: .12s ease;
+    }
+    .block:hover .block-tools, .block.selected .block-tools { opacity: 1; }
+    .mini {
+      width: 30px;
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: white;
+      cursor: pointer;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      font-size: 13px;
+    }
+    .mini:hover { color: var(--ink); border-color: #aaa49a; }
+    .drag-handle { cursor: grab; }
+
+    .editable {
+      min-height: 34px;
+      padding: 5px 7px;
+      outline: none;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.8;
+      font-family: inherit;
+      font-size: 16px;
+    }
+    .editable:empty::before {
+      content: attr(data-placeholder);
+      color: #aaa59a;
+      pointer-events: none;
+    }
+
+    .text-block .editable p { margin: 0 0 .85em; }
+    .text-block .editable p:last-child { margin-bottom: 0; }
+
+    .scene-block {
+      margin: 30px 0 10px;
+      padding: 18px 18px 16px;
+      border: 0;
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: linear-gradient(90deg, rgba(56,88,214,.06), transparent 65%);
+    }
+    .scene-number { color: var(--accent); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+    .scene-title { min-height: 30px; padding: 4px 0 0; font-size: 21px; font-weight: 800; line-height: 1.35; outline: none; }
+    .scene-title:empty::before { content: attr(data-placeholder); color: #aaa59a; }
+
+    .image-block {
+      grid-column: span var(--image-span, 12);
+      min-width: 0;
+      margin: 0;
+      padding: 10px;
+      background: #faf9f6;
+      border-color: #e5e1d8;
+    }
+    .image-block .block-tools {
+      left: 6px;
+      top: -34px;
+      flex-direction: row;
+      z-index: 14;
+    }
+    .image-stage {
+      position: relative;
+      width: 100%;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .image-frame {
+      position: relative;
+      width: 100%;
+      margin: 0 auto;
+      cursor: grab;
+      user-select: none;
+    }
+    .image-frame:active { cursor: grabbing; }
+    .image-move-hint {
+      position: absolute;
+      left: 50%;
+      top: 9px;
+      z-index: 4;
+      transform: translateX(-50%);
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: white;
+      background: rgba(24, 24, 22, .72);
+      font-size: 10px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease;
+    }
+    .image-block:hover .image-move-hint, .image-block.selected .image-move-hint { opacity: 1; }
+    body.dragging-block { user-select: none; }
+    body.dragging-block, body.dragging-block * { cursor: grabbing !important; }
+    .resize-handle {
+      position: absolute;
+      top: 50%;
+      width: 18px;
+      height: 38px;
+      padding: 0;
+      border: 2px solid white;
+      border-radius: 7px;
+      background: var(--accent);
+      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+      cursor: ew-resize;
+      opacity: 0;
+      transform: translateY(-50%);
+      transition: opacity .15s ease, transform .15s ease;
+      z-index: 5;
+      touch-action: none;
+      -webkit-user-drag: none;
+    }
+    .resize-handle.left { left: -9px; }
+    .resize-handle.right { right: -9px; }
+    .image-block:hover .resize-handle, .image-block.selected .resize-handle, .resize-handle:focus { opacity: 1; }
+    .resize-handle:hover { transform: translateY(-50%) scale(1.08); }
+    body.resizing-image { cursor: ew-resize; user-select: none; }
+    .image-stage img {
+      display: block;
+      cursor: grab;
+      touch-action: none;
+      width: 100%;
+      height: auto;
+      max-height: 620px;
+      object-fit: contain;
+      margin: 0 auto;
+      border-radius: 5px;
+      box-shadow: 0 2px 14px rgba(0,0,0,.08);
+    }
+    .caption {
+      min-height: 26px;
+      margin-top: 9px;
+      padding: 4px 6px;
+      outline: none;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .caption:empty::before { content: attr(data-placeholder); color: #aaa59a; }
+
+    .image-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .image-controls input[type="range"] { flex: 1; min-width: 80px; accent-color: var(--accent); }
+
+    .empty-state {
+      display: none;
+      padding: 70px 20px;
+      text-align: center;
+      color: var(--muted);
+      border: 2px dashed var(--line);
+      border-radius: 12px;
+    }
+    .empty-state.visible { display: block; }
+
+    .storyboard-view .document-heading { display: none; }
+    .storyboard-view #blocks { grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 18px; align-items: start; }
+    .storyboard-view .block { background: white; border-color: #dcd8cf; padding: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+    .storyboard-view .scene-block { grid-column: 1 / -1; margin: 16px 0 0; border-radius: 10px; }
+    .storyboard-view .text-block { grid-column: span 10; }
+    .storyboard-view .image-block { min-height: 180px; }
+    .storyboard-view .text-block .editable { font-size: 14px; line-height: 1.65; }
+    .storyboard-view .block-tools { left: 6px; top: -34px; flex-direction: row; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { padding: 11px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+    .stat-value { font-size: 20px; font-weight: 900; }
+    .stat-label { margin-top: 2px; color: var(--muted); font-size: 10px; }
+
+    .outline { display: grid; gap: 5px; }
+    .outline-item {
+      width: 100%;
+      padding: 8px 9px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .outline-item:hover { color: var(--ink); background: white; border-color: var(--line); }
+    .outline-item strong { color: var(--accent); margin-right: 5px; }
+    .outline-empty { color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+    .sheetbar {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: #e6e3dc;
+      border-top: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .sheet-tabs {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .sheet-tab {
+      height: 32px;
+      max-width: 220px;
+      padding: 0 15px;
+      border: 1px solid #cbc6bc;
+      border-bottom-color: #aaa49a;
+      border-radius: 8px 8px 3px 3px;
+      background: #f3f1ec;
+      color: var(--muted);
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+    .sheet-tab:hover { color: var(--ink); background: white; }
+    .sheet-tab.active {
+      color: var(--accent);
+      background: white;
+      border-color: #aab8ff;
+      border-bottom: 3px solid var(--accent);
+    }
+    .sheet-tab.dragging { opacity: .45; }
+    .sheet-tab.drop-target { box-shadow: -3px 0 0 var(--accent); }
+    .sheet-add, .sheet-action {
+      flex: 0 0 auto;
+      height: 30px;
+      border: 1px solid #c8c3b9;
+      border-radius: 7px;
+      background: white;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .sheet-add { width: 32px; color: var(--accent); font-size: 18px; }
+    .sheet-action { padding: 0 9px; color: var(--muted); font-size: 11px; }
+    .sheet-add:hover, .sheet-action:hover { color: var(--ink); border-color: #99938a; }
+    .sheet-action.delete-sheet:hover { color: var(--danger); }
+
+    .statusbar {
+      min-height: 30px;
+      padding: 5px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      background: white;
+      border-top: 1px solid var(--line);
+      font-size: 11px;
+    }
+    .save-state { margin-left: auto; }
+
+    .menu { position: relative; }
+    .menu-popover {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 42px;
+      width: 190px;
+      padding: 7px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 12px 32px rgba(0,0,0,.14);
+      z-index: 50;
+    }
+    .menu.open .menu-popover { display: grid; gap: 3px; }
+    .menu-popover button {
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      font-size: 12px;
+    }
+    .menu-popover button:hover { background: var(--panel); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 48px;
+      transform: translate(-50%, 20px);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: white;
+      background: #292825;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      z-index: 100;
+      font-size: 12px;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    input[type="file"] { display: none; }
+
+
+    /* 자유 배치 이미지·텍스트 오브젝트 레이어 */
+    .image-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .image-layer .image-block {
+      position: absolute;
+      display: block;
+      min-width: 72px;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      box-shadow: none;
+      pointer-events: auto;
+      overflow: visible;
+      transition: outline-color .12s ease, filter .12s ease;
+      touch-action: none;
+    }
+
+    .image-layer .image-block:hover { border-color: transparent; }
+    .image-layer .image-block.selected {
+      z-index: 10000 !important;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .image-layer .image-stage,
+    .image-layer .image-frame {
+      width: 100%;
+      margin: 0;
+    }
+
+    .image-layer .image-frame {
+      position: relative;
+      cursor: move;
+      touch-action: none;
+    }
+
+    .image-layer .image-block.selected .image-frame {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 5px;
+    }
+
+    .image-layer .image-stage img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: none;
+      margin: 0;
+      border-radius: 5px;
+      object-fit: contain;
+      box-shadow: 0 2px 14px rgba(0,0,0,.12);
+      cursor: move;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .image-layer .image-block:not(.selected) .block-tools,
+    .image-layer .image-block:not(.selected) .image-controls,
+    .image-layer .image-block:not(.selected) .resize-handle,
+    .image-layer .image-block:not(.selected) .caption,
+    .image-layer .image-block:not(.selected) .image-move-hint {
+      display: none !important;
+    }
+
+    .image-layer .image-block.selected .resize-handle {
+      display: block;
+      opacity: 1;
+    }
+
+    .image-layer .image-block.selected .image-move-hint {
+      display: block;
+      opacity: 1;
+    }
+
+    .image-layer .image-controls {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 12px);
+      z-index: 20;
+      width: max(290px, 100%);
+      max-width: min(420px, calc(100vw - 80px));
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid #cfc9be;
+      border-radius: 10px;
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+    }
+
+    .image-layer .image-controls .edit-title {
+      width: 100%;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .image-layer .image-controls input[type="range"] {
+      flex: 1;
+      min-width: 90px;
+    }
+
+    .image-layer .caption {
+      width: 100%;
+      min-height: 34px;
+      margin: 9px 0 0;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: white;
+      text-align: left;
+    }
+
+    .image-layer .block-tools { display: none !important; }
+    body.moving-image, body.moving-image * { cursor: move !important; user-select: none !important; }
+
+    /* 자유 배치 텍스트 상자 */
+    .image-layer .text-block {
+      position: absolute;
+      display: block;
+      min-width: 120px;
+      min-height: 60px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 7px;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      pointer-events: auto;
+      overflow: visible;
+      touch-action: none;
+    }
+
+    .image-layer .text-block.selected {
+      z-index: 10000 !important;
+      box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0,0,0,.14);
+    }
+
+    .text-box-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+    }
+
+    .text-box-editable {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      padding: 14px 16px;
+      border: 0;
+      border-radius: 7px;
+      outline: none;
+      overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.55;
+      background: transparent;
+      cursor: text;
+    }
+
+    .text-box-editable:empty::before {
+      content: attr(data-placeholder);
+      color: #aaa59a;
+      pointer-events: none;
+    }
+
+    .text-drag-bar {
+      position: absolute;
+      left: 50%;
+      top: -31px;
+      z-index: 22;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 5px;
+      height: 25px;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 999px;
+      color: white;
+      background: rgba(31,31,29,.82);
+      box-shadow: 0 4px 12px rgba(0,0,0,.18);
+      cursor: move;
+      user-select: none;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      touch-action: none;
+    }
+
+    .image-layer .text-block.selected .text-drag-bar { display: flex; }
+
+    .text-resize-handle {
+      position: absolute;
+      z-index: 24;
+      display: none;
+      width: 14px;
+      height: 14px;
+      padding: 0;
+      border: 2px solid white;
+      border-radius: 4px;
+      background: var(--accent);
+      box-shadow: 0 2px 7px rgba(0,0,0,.24);
+      touch-action: none;
+    }
+    .image-layer .text-block.selected .text-resize-handle { display: block; }
+    .text-resize-handle.nw { left: -8px; top: -8px; cursor: nwse-resize; }
+    .text-resize-handle.ne { right: -8px; top: -8px; cursor: nesw-resize; }
+    .text-resize-handle.sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
+    .text-resize-handle.se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+
+    .text-controls {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 12px);
+      z-index: 25;
+      display: none;
+      width: max(360px, 100%);
+      max-width: min(560px, calc(100vw - 80px));
+      grid-template-columns: auto minmax(120px, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 11px;
+      border: 1px solid #cfc9be;
+      border-radius: 10px;
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+    }
+    .image-layer .text-block.selected .text-controls { display: grid; }
+    .text-controls .edit-title {
+      grid-column: 1 / -1;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .text-controls select,
+    .text-controls input[type="number"] {
+      height: 29px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: white;
+      outline: none;
+      padding: 0 7px;
+    }
+    .text-controls input[type="range"] { min-width: 110px; accent-color: var(--accent); }
+    .text-control-wide { grid-column: 2 / -1; width: 100%; }
+    .text-control-buttons {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 3px;
+    }
+    body.moving-text, body.moving-text * { cursor: move !important; user-select: none !important; }
+    body.resizing-text, body.resizing-text * { user-select: none !important; }
+
+    @media (max-width: 1100px) {
+      .workspace { grid-template-columns: 190px minmax(480px, 1fr); }
+      .inspector { display: none; }
+      .paper { padding-left: 64px; padding-right: 54px; }
+    }
+
+    @media (max-width: 760px) {
+      body { overflow: auto; }
+      .app { height: auto; min-height: 100%; display: block; }
+      .topbar { position: sticky; top: 0; flex-wrap: wrap; }
+      .brand { min-width: auto; }
+      .brand-name-wrap { display:none; }
+      .title-input { order: 3; max-width: none; flex-basis: 100%; }
+      .toolbar { position: sticky; top: 94px; }
+      .workspace { display: block; }
+      .sidebar, .inspector { display: none; }
+      .canvas-wrap { padding: 12px 0 70px; overflow: visible; }
+      .paper { width: 100%; min-height: 100vh; padding: 42px 28px 90px; border-left: 0; border-right: 0; box-shadow: none; }
+      .block-tools { left: auto; right: 2px; top: -30px; flex-direction: row; }
+      #blocks, .storyboard-view #blocks { grid-template-columns: 1fr; }
+      #blocks .image-block, .storyboard-view .text-block { grid-column: 1 / -1 !important; }
+      .text-controls { width: min(380px, calc(100vw - 42px)); grid-template-columns: 1fr; }
+      .text-controls .edit-title, .text-control-wide, .text-control-buttons { grid-column: 1; }
+      .statusbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; }
+    }
+
+    @media print {
+      body { background: white; overflow: visible; }
+      .topbar, .toolbar, .sidebar, .inspector, .sheetbar, .statusbar, .block-tools, .image-controls, .text-controls, .resize-handle, .text-resize-handle, .text-drag-bar, .toast { display: none !important; }
+      .app, .workspace, .canvas-wrap { display: block; height: auto; overflow: visible; padding: 0; }
+      .paper, .paper.storyboard-view { width: 100%; min-height: 0; padding: 15mm 18mm; border: 0; box-shadow: none; background: white; }
+      .block, .storyboard-view .block { break-inside: avoid; box-shadow: none; }
+      .editable:empty, .caption:empty { display: none; }
+      .image-layer .image-block .caption { display: block !important; }
+      .image-layer .image-block .image-frame { outline: none !important; }
+    }
+
+    /* 자유 배치 장면 탭 */
+    .image-layer .scene-block {
+      position: absolute;
+      display: block;
+      min-width: 180px;
+      min-height: 64px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      box-shadow: none;
+      pointer-events: auto;
+      overflow: visible;
+      touch-action: none;
+    }
+
+    .image-layer .scene-block:hover { border-color: transparent; }
+    .image-layer .scene-block.selected {
+      z-index: 10000 !important;
+      box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0,0,0,.14);
+    }
+
+    .scene-box-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      padding: 15px 18px 13px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--line);
+      border-radius: 2px;
+      background: linear-gradient(90deg, rgba(56,88,214,.08), rgba(255,255,255,.93) 68%);
+      overflow: visible;
+    }
+
+    .image-layer .scene-number {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: .12em;
+    }
+
+    .image-layer .scene-title {
+      min-height: 28px;
+      max-height: calc(100% - 18px);
+      padding: 6px 0 0;
+      overflow: auto;
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1.3;
+      outline: none;
+      cursor: text;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .scene-drag-bar {
+      position: absolute;
+      left: 50%;
+      top: -31px;
+      z-index: 32;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      height: 25px;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 999px;
+      color: white;
+      background: rgba(31,31,29,.82);
+      box-shadow: 0 4px 12px rgba(0,0,0,.18);
+      cursor: move;
+      user-select: none;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      touch-action: none;
+    }
+    .image-layer .scene-block.selected .scene-drag-bar { display: flex; }
+
+    .scene-resize-handle {
+      position: absolute;
+      z-index: 34;
+      display: none;
+      width: 14px;
+      height: 14px;
+      padding: 0;
+      border: 2px solid white;
+      border-radius: 4px;
+      background: var(--accent);
+      box-shadow: 0 2px 7px rgba(0,0,0,.24);
+      touch-action: none;
+    }
+    .image-layer .scene-block.selected .scene-resize-handle { display: block; }
+    .scene-resize-handle.nw { left: -8px; top: -8px; cursor: nwse-resize; }
+    .scene-resize-handle.ne { right: -8px; top: -8px; cursor: nesw-resize; }
+    .scene-resize-handle.sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
+    .scene-resize-handle.se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+
+    .scene-controls {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 12px);
+      z-index: 35;
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      width: max(310px, 100%);
+      max-width: min(480px, calc(100vw - 80px));
+      padding: 10px;
+      border: 1px solid #cfc9be;
+      border-radius: 10px;
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+    }
+    .image-layer .scene-block.selected .scene-controls { display: flex; }
+    .scene-controls .edit-title {
+      width: 100%;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .image-layer .scene-block:not(.selected) .scene-controls,
+    .image-layer .scene-block:not(.selected) .scene-resize-handle,
+    .image-layer .scene-block:not(.selected) .scene-drag-bar {
+      display: none !important;
+    }
+
+    body.moving-scene, body.moving-scene * { cursor: move !important; user-select: none !important; }
+    body.resizing-scene, body.resizing-scene * { user-select: none !important; }
+
+    @media print {
+      .scene-controls, .scene-resize-handle, .scene-drag-bar { display: none !important; }
+      .image-layer .scene-block.selected { box-shadow: none !important; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">S</div>
+        <div class="brand-name-wrap">
+          <div class="brand-name">Story Canvas</div>
+          <span class="brand-sub">텍스트와 이미지로 만드는 스토리보드</span>
+        </div>
+      </div>
+
+      <input id="titleInput" class="title-input" value="스토리보드 프로젝트" aria-label="프로젝트 파일 제목" />
+
+      <div class="top-actions">
+        <button id="viewToggle" class="btn soft" type="button">스토리보드 보기</button>
+        <button id="printBtn" class="btn" type="button">인쇄 / PDF</button>
+        <div id="fileMenu" class="menu">
+          <button id="fileMenuBtn" class="btn primary" type="button">파일 ▾</button>
+          <div class="menu-popover">
+            <button id="newBtn" type="button">새 문서</button>
+            <button id="exportJsonBtn" type="button">편집 파일 내보내기 (.json)</button>
+            <button id="importJsonBtn" type="button">편집 파일 불러오기</button>
+            <button id="exportHtmlBtn" type="button">읽기용 HTML 내보내기</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="toolbar" aria-label="서식 도구">
+      <div class="tool-group">
+        <select id="formatBlock" class="select" title="문단 스타일">
+          <option value="p">본문</option>
+          <option value="h1">제목 1</option>
+          <option value="h2">제목 2</option>
+          <option value="blockquote">인용문</option>
+        </select>
+        <button class="icon-btn format-command" data-command="bold" title="굵게"><b>B</b></button>
+        <button class="icon-btn format-command" data-command="italic" title="기울임"><i>I</i></button>
+        <button class="icon-btn format-command" data-command="underline" title="밑줄"><u>U</u></button>
+      </div>
+      <span class="divider"></span>
+      <div class="tool-group">
+        <button class="icon-btn format-command" data-command="justifyLeft" title="왼쪽 정렬">≡</button>
+        <button class="icon-btn format-command" data-command="justifyCenter" title="가운데 정렬">≣</button>
+        <button class="icon-btn format-command" data-command="insertUnorderedList" title="목록">•≡</button>
+      </div>
+      <span class="divider"></span>
+      <div class="tool-group">
+        <button id="addTextTop" class="btn" type="button">＋ 텍스트</button>
+        <button id="addImageTop" class="btn" type="button">＋ 이미지</button>
+        <button id="addSceneTop" class="btn" type="button">＋ 장면</button>
+      </div>
+      <span class="divider"></span>
+      <div class="tool-group">
+        <button id="undoBtn" class="icon-btn" type="button" title="되돌리기">↶</button>
+        <button id="redoBtn" class="icon-btn" type="button" title="다시 실행">↷</button>
+      </div>
+    </nav>
+
+    <main class="workspace">
+      <aside class="sidebar">
+        <div class="panel-title">블록 삽입</div>
+        <div class="insert-list">
+          <button id="addTextSide" class="insert-card" type="button">
+            <span class="insert-icon">T</span>
+            <span><strong>텍스트</strong><span>대사, 지문, 설명을 입력합니다.</span></span>
+          </button>
+          <button id="addImageSide" class="insert-card" type="button">
+            <span class="insert-icon">▧</span>
+            <span><strong>이미지</strong><span>이미지를 불러와 자유롭게 겹쳐 배치합니다.</span></span>
+          </button>
+          <button id="addSceneSide" class="insert-card" type="button">
+            <span class="insert-icon">#</span>
+            <span><strong>장면 구분</strong><span>장면 제목과 번호를 만듭니다.</span></span>
+          </button>
+        </div>
+
+        <div class="side-section">
+          <div class="panel-title">사용 팁</div>
+          <div class="tip">
+            이미지·텍스트 상자·장면 탭은 자유롭게 겹쳐 배치할 수 있습니다. 오브젝트를 클릭하면 편집 메뉴가 열리고, 이동 손잡이와 네 모서리로 위치와 크기를 조절할 수 있습니다.
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas-wrap" id="canvasWrap">
+        <article class="paper" id="paper">
+          <header class="document-heading">
+            <h1 class="document-title" id="documentTitle" contenteditable="true" data-placeholder="스토리보드 시트 이름">스토리보드 1</h1>
+            <div class="document-meta" id="documentMeta">장면 1개 · 이미지 0개</div>
+          </header>
+          <div id="blocks"></div>
+          <div id="imageLayer" class="image-layer" aria-label="자유 배치 이미지, 텍스트와 장면 레이어"></div>
+          <div id="emptyState" class="empty-state">
+            첫 텍스트나 이미지를 추가해 이야기를 시작하세요.
+          </div>
+        </article>
+      </section>
+
+      <aside class="inspector">
+        <div class="panel-title">문서 통계</div>
+        <div class="stat-grid">
+          <div class="stat"><div id="wordCount" class="stat-value">0</div><div class="stat-label">글자 수(공백 제외)</div></div>
+          <div class="stat"><div id="blockCount" class="stat-value">0</div><div class="stat-label">전체 블록</div></div>
+          <div class="stat"><div id="sceneCount" class="stat-value">0</div><div class="stat-label">장면</div></div>
+          <div class="stat"><div id="imageCount" class="stat-value">0</div><div class="stat-label">이미지</div></div>
+        </div>
+
+        <div class="side-section">
+          <div class="panel-title">장면 목차</div>
+          <div id="outline" class="outline"></div>
+        </div>
+      </aside>
+    </main>
+
+    <div class="sheetbar" aria-label="스토리보드 시트">
+      <button id="addSheetBtn" class="sheet-add" type="button" title="새 스토리보드 시트 추가">＋</button>
+      <div id="sheetTabs" class="sheet-tabs"></div>
+      <button id="renameSheetBtn" class="sheet-action" type="button" title="현재 시트 이름 변경">이름 변경</button>
+      <button id="duplicateSheetBtn" class="sheet-action" type="button" title="현재 시트 복제">복제</button>
+      <button id="deleteSheetBtn" class="sheet-action delete-sheet" type="button" title="현재 시트 삭제">삭제</button>
+    </div>
+
+    <footer class="statusbar">
+      <span id="selectionStatus">블록을 선택하세요</span>
+      <span>Ctrl/Cmd+S: 모든 시트 저장 · 텍스트/이미지/장면 탭 자유 이동 및 겹치기 가능</span>
+      <span id="saveState" class="save-state">자동 저장됨</span>
+    </footer>
+  </div>
+
+  <input id="imageInput" type="file" accept="image/*" multiple />
+  <input id="jsonInput" type="file" accept="application/json,.json" />
+  <div id="toast" class="toast"></div>
+
+  <script>
+(() => {
+      const DB_NAME = 'story-canvas-db';
+      const DB_STORE = 'documents';
+      const DB_KEY = 'current-workbook';
+      const LEGACY_DB_KEY = 'current-document';
+
+      const blocksEl = document.getElementById('blocks');
+      const paperEl = document.getElementById('paper');
+      const imageLayerEl = document.getElementById('imageLayer');
+      const canvasWrapEl = document.getElementById('canvasWrap');
+      const emptyStateEl = document.getElementById('emptyState');
+      const titleInput = document.getElementById('titleInput');
+      const documentTitle = document.getElementById('documentTitle');
+      const documentMeta = document.getElementById('documentMeta');
+      const imageInput = document.getElementById('imageInput');
+      const jsonInput = document.getElementById('jsonInput');
+      const toastEl = document.getElementById('toast');
+      const fileMenu = document.getElementById('fileMenu');
+      const viewToggle = document.getElementById('viewToggle');
+      const sheetTabsEl = document.getElementById('sheetTabs');
+
+      let workbook = createDefaultWorkbook();
+      let doc = workbook.sheets[0];
+      let selectedId = null;
+      let activeEditable = null;
+      let dragId = null;
+      let sheetDragId = null;
+      let saveTimer = null;
+      let history = [];
+      let historyIndex = -1;
+      let isRestoringHistory = false;
+
+      function uid() {
+        return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function createDefaultBlocks() {
+        return [
+          { id: uid(), type: 'scene', title: '첫 번째 장면', x: 78, y: 250, width: 560, height: 92, z: 1 },
+          { id: uid(), type: 'text', html: '<p>이곳에 장면 설명이나 대사를 입력하세요.</p>', x: 78, y: 390, width: 430, height: 140, z: 2, fontSize: 16, fontFamily: 'Pretendard, \"Noto Sans KR\", \"Apple SD Gothic Neo\", system-ui, sans-serif' }
+        ];
+      }
+
+      function createDefaultSheet(title = '스토리보드 1') {
+        return {
+          id: uid(),
+          title,
+          view: 'document',
+          blocks: createDefaultBlocks()
+        };
+      }
+
+      function createDefaultWorkbook() {
+        const firstSheet = createDefaultSheet();
+        return {
+          version: 6,
+          title: '스토리보드 프로젝트',
+          activeSheetId: firstSheet.id,
+          updatedAt: new Date().toISOString(),
+          sheets: [firstSheet]
+        };
+      }
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function activeSheet() {
+        let sheet = workbook.sheets.find(item => item.id === workbook.activeSheetId);
+        if (!sheet) {
+          sheet = workbook.sheets[0];
+          workbook.activeSheetId = sheet?.id || null;
+        }
+        return sheet;
+      }
+
+      function activateSheet(id, save = true) {
+        const next = workbook.sheets.find(sheet => sheet.id === id);
+        if (!next || next.id === workbook.activeSheetId) return;
+        workbook.activeSheetId = next.id;
+        doc = next;
+        selectedId = null;
+        activeEditable = null;
+        render();
+        if (save) scheduleSave(false);
+      }
+
+      function sanitizeHTML(html) {
+        const template = document.createElement('template');
+        template.innerHTML = String(html || '');
+        template.content.querySelectorAll('script, style, iframe, object, embed').forEach(el => el.remove());
+        template.content.querySelectorAll('*').forEach(el => {
+          [...el.attributes].forEach(attr => {
+            if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
+            if ((attr.name === 'href' || attr.name === 'src') && /^javascript:/i.test(attr.value)) el.removeAttribute(attr.name);
+          });
+        });
+        return template.innerHTML;
+      }
+
+      function normalizeBlock(block, index = 0) {
+        if (block?.type === 'image') {
+          const hasX = block.x !== undefined && block.x !== null && Number.isFinite(Number(block.x));
+          const hasY = block.y !== undefined && block.y !== null && Number.isFinite(Number(block.y));
+          const hasZ = block.z !== undefined && block.z !== null && Number.isFinite(Number(block.z));
+          return {
+            id: uid(), type: 'image', src: String(block.src || ''),
+            alt: String(block.alt || '스토리보드 이미지').slice(0, 300),
+            caption: String(block.caption || '').slice(0, 1000),
+            width: Math.min(100, Math.max(10, Number(block.width) || 45)),
+            x: hasX ? Math.max(0, Number(block.x)) : 86 + (index % 5) * 22,
+            y: hasY ? Math.max(0, Number(block.y)) : 170 + index * 34,
+            z: hasZ ? Number(block.z) : index + 1
+          };
+        }
+        if (block?.type === 'scene') {
+          const hasX = block.x !== undefined && block.x !== null && Number.isFinite(Number(block.x));
+          const hasY = block.y !== undefined && block.y !== null && Number.isFinite(Number(block.y));
+          const hasZ = block.z !== undefined && block.z !== null && Number.isFinite(Number(block.z));
+          return {
+            id: uid(), type: 'scene', title: String(block.title || '').slice(0, 300),
+            x: hasX ? Math.max(0, Number(block.x)) : 78 + (index % 3) * 18,
+            y: hasY ? Math.max(0, Number(block.y)) : 250 + index * 118,
+            width: Math.max(180, Number(block.width) || Number(block.boxWidth) || 560),
+            height: Math.max(64, Number(block.height) || Number(block.boxHeight) || 92),
+            z: hasZ ? Number(block.z) : index + 1
+          };
+        }
+        if (block?.type === 'text') {
+          const hasX = block.x !== undefined && block.x !== null && Number.isFinite(Number(block.x));
+          const hasY = block.y !== undefined && block.y !== null && Number.isFinite(Number(block.y));
+          const hasZ = block.z !== undefined && block.z !== null && Number.isFinite(Number(block.z));
+          return {
+            id: uid(), type: 'text', html: sanitizeHTML(block.html || ''),
+            x: hasX ? Math.max(0, Number(block.x)) : 78 + (index % 3) * 20,
+            y: hasY ? Math.max(0, Number(block.y)) : 245 + index * 128,
+            width: Math.max(120, Number(block.width) || Number(block.boxWidth) || 430),
+            height: Math.max(60, Number(block.height) || Number(block.boxHeight) || 140),
+            z: hasZ ? Number(block.z) : index + 1,
+            fontSize: Math.min(96, Math.max(8, Number(block.fontSize) || 16)),
+            fontFamily: String(block.fontFamily || 'Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif').slice(0, 240)
+          };
+        }
+        return { id: uid(), type: 'text', html: '' };
+      }
+
+      function normalizeSheet(sheet, index = 0) {
+        return {
+          id: uid(),
+          title: String(sheet?.title || sheet?.name || `스토리보드 ${index + 1}`).slice(0, 80),
+          view: sheet?.view === 'storyboard' ? 'storyboard' : 'document',
+          blocks: Array.isArray(sheet?.blocks) ? sheet.blocks.map((block, blockIndex) => normalizeBlock(block, blockIndex)) : []
+        };
+      }
+
+      function normalizeDocument(data) {
+        if (!data || typeof data !== 'object') throw new Error('올바른 Story Canvas 문서가 아닙니다.');
+
+        if (Array.isArray(data.sheets)) {
+          const activeIndex = Math.max(0, data.sheets.findIndex(sheet => sheet?.id === data.activeSheetId));
+          const sheets = data.sheets.map(normalizeSheet);
+          if (!sheets.length) sheets.push(createDefaultSheet());
+          return {
+            version: 6,
+            title: String(data.title || '스토리보드 프로젝트').slice(0, 120),
+            activeSheetId: sheets[Math.min(activeIndex, sheets.length - 1)].id,
+            updatedAt: new Date().toISOString(),
+            sheets
+          };
+        }
+
+        if (Array.isArray(data.blocks)) {
+          const sheet = normalizeSheet({
+            title: data.title || '스토리보드 1',
+            view: data.view,
+            blocks: data.blocks
+          });
+          return {
+            version: 6,
+            title: String(data.title || '스토리보드 프로젝트').slice(0, 120),
+            activeSheetId: sheet.id,
+            updatedAt: new Date().toISOString(),
+            sheets: [sheet]
+          };
+        }
+
+        throw new Error('올바른 Story Canvas 문서가 아닙니다.');
+      }
+
+      async function openDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function dbGetKey(key) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readonly');
+          const req = tx.objectStore(DB_STORE).get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbGet() {
+        const current = await dbGetKey(DB_KEY);
+        return current ?? await dbGetKey(LEGACY_DB_KEY);
+      }
+
+      async function dbSet(value) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put(value, DB_KEY);
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      function setSaveState(text) {
+        document.getElementById('saveState').textContent = text;
+      }
+
+      function scheduleSave(pushHistory = true) {
+        workbook.updatedAt = new Date().toISOString();
+        setSaveState('저장 중…');
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(async () => {
+          try {
+            await dbSet(workbook);
+            setSaveState('자동 저장됨');
+            if (pushHistory && !isRestoringHistory) addHistorySnapshot();
+          } catch (error) {
+            console.error(error);
+            setSaveState('자동 저장 실패');
+          }
+        }, 400);
+      }
+
+      function addHistorySnapshot() {
+        const snapshot = JSON.stringify(workbook);
+        if (history[historyIndex] === snapshot) return;
+        history = history.slice(0, historyIndex + 1);
+        history.push(snapshot);
+        if (history.length > 50) history.shift();
+        historyIndex = history.length - 1;
+      }
+
+      function restoreHistory(index) {
+        if (index < 0 || index >= history.length) return;
+        isRestoringHistory = true;
+        historyIndex = index;
+        workbook = JSON.parse(history[historyIndex]);
+        doc = activeSheet();
+        selectedId = null;
+        activeEditable = null;
+        render();
+        dbSet(workbook).finally(() => { isRestoringHistory = false; });
+      }
+
+      function undo() { restoreHistory(historyIndex - 1); }
+      function redo() { restoreHistory(historyIndex + 1); }
+
+      function selectBlock(id, focus = false) {
+        selectedId = id;
+        document.querySelectorAll('.block').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+        const block = doc.blocks.find(b => b.id === id);
+        document.getElementById('selectionStatus').textContent = block ? `${block.type === 'text' ? '텍스트' : block.type === 'image' ? '이미지' : '장면'} 블록 선택됨` : '블록을 선택하세요';
+        if (focus) {
+          const target = document.querySelector(`.block[data-id="${CSS.escape(id)}"] [contenteditable="true"]`);
+          target?.focus();
+        }
+        requestAnimationFrame(ensurePaperHeight);
+      }
+
+      function insertIndex() {
+        const index = doc.blocks.findIndex(b => b.id === selectedId);
+        return index >= 0 ? index + 1 : doc.blocks.length;
+      }
+
+      function addText() {
+        const placement = defaultImagePlacement(0);
+        const block = {
+          id: uid(), type: 'text', html: '',
+          x: placement.x, y: placement.y,
+          width: 430, height: 140,
+          z: maxImageZ() + 1,
+          fontSize: 16,
+          fontFamily: 'Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif'
+        };
+        doc.blocks.splice(insertIndex(), 0, block);
+        selectedId = block.id;
+        render();
+        scheduleSave();
+        setTimeout(() => selectBlock(block.id, true));
+      }
+
+      function addScene() {
+        const count = doc.blocks.filter(b => b.type === 'scene').length + 1;
+        const placement = defaultImagePlacement(0);
+        const block = {
+          id: uid(), type: 'scene', title: `장면 ${count}`,
+          x: placement.x, y: placement.y,
+          width: 560, height: 92,
+          z: maxImageZ() + 1
+        };
+        doc.blocks.splice(insertIndex(), 0, block);
+        selectedId = block.id;
+        render();
+        scheduleSave();
+        setTimeout(() => selectBlock(block.id, true));
+      }
+
+      function requestImage() { imageInput.click(); }
+
+      function maxImageZ() {
+        return doc.blocks.reduce((max, block) => (block.type === 'image' || block.type === 'text' || block.type === 'scene') ? Math.max(max, Number(block.z) || 0) : max, 0);
+      }
+
+      function minImageZ() {
+        const values = doc.blocks.filter(block => block.type === 'image' || block.type === 'text' || block.type === 'scene').map(block => Number(block.z) || 0);
+        return values.length ? Math.min(...values) : 0;
+      }
+
+      function defaultImagePlacement(offset = 0) {
+        const visibleY = Math.max(100, (canvasWrapEl?.scrollTop || 0) - (paperEl?.offsetTop || 0) + 150);
+        return {
+          x: 82 + (offset % 5) * 24,
+          y: visibleY + offset * 24
+        };
+      }
+
+      function clampImagePosition(block, el) {
+        const maxX = Math.max(0, paperEl.clientWidth - (el?.offsetWidth || 0));
+        block.x = Math.min(maxX, Math.max(0, Number(block.x) || 0));
+        block.y = Math.max(0, Number(block.y) || 0);
+      }
+
+      function applyImageGeometry(block, el) {
+        el.style.left = `${Math.round(Number(block.x) || 0)}px`;
+        el.style.top = `${Math.round(Number(block.y) || 0)}px`;
+        el.style.width = `${Math.min(100, Math.max(10, Number(block.width) || 45))}%`;
+        el.style.zIndex = String(Number(block.z) || 1);
+      }
+
+      function clampTextPosition(block, el) {
+        const width = Math.max(120, Number(block.width) || el?.offsetWidth || 430);
+        const maxX = Math.max(0, paperEl.clientWidth - width);
+        block.x = Math.min(maxX, Math.max(0, Number(block.x) || 0));
+        block.y = Math.max(0, Number(block.y) || 0);
+      }
+
+      function applyTextGeometry(block, el) {
+        el.style.left = `${Math.round(Number(block.x) || 0)}px`;
+        el.style.top = `${Math.round(Number(block.y) || 0)}px`;
+        el.style.width = `${Math.max(120, Number(block.width) || 430)}px`;
+        el.style.height = `${Math.max(60, Number(block.height) || 140)}px`;
+        el.style.zIndex = String(Number(block.z) || 1);
+        const editable = el.querySelector('.text-box-editable');
+        if (editable) {
+          editable.style.fontSize = `${Math.min(96, Math.max(8, Number(block.fontSize) || 16))}px`;
+          editable.style.fontFamily = block.fontFamily || 'inherit';
+        }
+      }
+
+      function clampScenePosition(block, el) {
+        const width = Math.max(180, Number(block.width) || el?.offsetWidth || 560);
+        const maxX = Math.max(0, paperEl.clientWidth - width);
+        block.x = Math.min(maxX, Math.max(0, Number(block.x) || 0));
+        block.y = Math.max(0, Number(block.y) || 0);
+      }
+
+      function applySceneGeometry(block, el) {
+        el.style.left = `${Math.round(Number(block.x) || 0)}px`;
+        el.style.top = `${Math.round(Number(block.y) || 0)}px`;
+        el.style.width = `${Math.max(180, Number(block.width) || 560)}px`;
+        el.style.height = `${Math.max(64, Number(block.height) || 92)}px`;
+        el.style.zIndex = String(Number(block.z) || 1);
+      }
+
+      function ensurePaperHeight() {
+        const contentBottom = Math.max(1120, blocksEl.offsetTop + blocksEl.scrollHeight + 110);
+        let objectBottom = 0;
+        imageLayerEl.querySelectorAll('.image-block, .text-block, .scene-block').forEach(el => {
+          const block = doc.blocks.find(item => item.id === el.dataset.id);
+          if (!block) return;
+          objectBottom = Math.max(objectBottom, (Number(block.y) || 0) + el.offsetHeight + 170);
+        });
+        paperEl.style.minHeight = `${Math.max(contentBottom, objectBottom, 1120)}px`;
+      }
+
+      function changeImageLayer(block, direction) {
+        block.z = direction > 0 ? maxImageZ() + 1 : minImageZ() - 1;
+        const el = imageLayerEl.querySelector(`.block[data-id="${CSS.escape(block.id)}"]`);
+        if (el) el.style.zIndex = String(block.z);
+        selectBlock(null);
+        scheduleSave();
+      }
+
+      async function fileToDataURL(file) {
+        if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 넣을 수 있습니다.');
+        const maxBytes = 18 * 1024 * 1024;
+        if (file.size > maxBytes) throw new Error('이미지 한 장은 18MB 이하로 사용해 주세요.');
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('이미지를 읽지 못했습니다.'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function addImages(files, atIndex = insertIndex(), placement = null) {
+        const valid = [...files].filter(file => file.type.startsWith('image/'));
+        if (!valid.length) return;
+        try {
+          const newBlocks = [];
+          const topZ = maxImageZ();
+          for (let index = 0; index < valid.length; index++) {
+            const file = valid[index];
+            const src = await fileToDataURL(file);
+            const base = placement || defaultImagePlacement(index);
+            newBlocks.push({
+              id: uid(), type: 'image', src, alt: file.name, caption: '', width: 45,
+              x: Math.max(0, Number(base.x) + index * 22),
+              y: Math.max(0, Number(base.y) + index * 22),
+              z: topZ + index + 1
+            });
+          }
+          doc.blocks.splice(atIndex, 0, ...newBlocks);
+          selectedId = null;
+          render();
+          scheduleSave();
+          toast(`${newBlocks.length}개의 이미지를 삽입했습니다.`);
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
+
+      function removeBlock(id) {
+        const index = doc.blocks.findIndex(b => b.id === id);
+        if (index < 0) return;
+        doc.blocks.splice(index, 1);
+        selectedId = doc.blocks[Math.min(index, doc.blocks.length - 1)]?.id || null;
+        render();
+        scheduleSave();
+      }
+
+      function moveBlock(id, direction) {
+        const index = doc.blocks.findIndex(b => b.id === id);
+        const next = index + direction;
+        if (index < 0 || next < 0 || next >= doc.blocks.length) return;
+        const [item] = doc.blocks.splice(index, 1);
+        doc.blocks.splice(next, 0, item);
+        render();
+        scheduleSave();
+        document.querySelector(`.block[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+
+      function duplicateBlock(id) {
+        const index = doc.blocks.findIndex(b => b.id === id);
+        if (index < 0) return;
+        const copy = clone(doc.blocks[index]);
+        copy.id = uid();
+        if (copy.type === 'image' || copy.type === 'text' || copy.type === 'scene') {
+          copy.x = (Number(copy.x) || 0) + 24;
+          copy.y = (Number(copy.y) || 0) + 24;
+          copy.z = maxImageZ() + 1;
+        }
+        doc.blocks.splice(index + 1, 0, copy);
+        selectedId = copy.id;
+        render();
+        scheduleSave();
+      }
+
+      function reorderBlock(sourceId, targetId, after) {
+        if (sourceId === targetId) return;
+        const sourceIndex = doc.blocks.findIndex(b => b.id === sourceId);
+        let targetIndex = doc.blocks.findIndex(b => b.id === targetId);
+        if (sourceIndex < 0 || targetIndex < 0) return;
+        const [item] = doc.blocks.splice(sourceIndex, 1);
+        if (sourceIndex < targetIndex) targetIndex--;
+        doc.blocks.splice(targetIndex + (after ? 1 : 0), 0, item);
+        selectedId = sourceId;
+        render();
+        scheduleSave();
+      }
+
+      function clearDropMarkers() {
+        document.querySelectorAll('.block').forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-left', 'drop-right'));
+      }
+
+      function clearBlockDropIndicators() {
+        document.querySelectorAll('.block').forEach(el => el.classList.remove('dragging'));
+        clearDropMarkers();
+      }
+
+      function beginBlockDrag(event, id) {
+        dragId = id;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', id);
+        document.body.classList.add('dragging-block');
+        setTimeout(() => document.querySelector(`.block[data-id="${CSS.escape(id)}"]`)?.classList.add('dragging'), 0);
+      }
+
+      function endBlockDrag() {
+        dragId = null;
+        document.body.classList.remove('dragging-block');
+        clearBlockDropIndicators();
+      }
+
+      function dropAfterTarget(event, targetBlock, targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        const sourceBlock = doc.blocks.find(item => item.id === dragId);
+        if (sourceBlock?.type === 'image' && targetBlock.type === 'image') {
+          return event.clientX > rect.left + rect.width / 2;
+        }
+        return event.clientY > rect.top + rect.height / 2;
+      }
+
+      function findDropTargetAtPoint(x, y, sourceId) {
+        const candidates = [...document.querySelectorAll('.block')]
+          .filter(el => el.dataset.id !== sourceId)
+          .map(el => ({ el, rect: el.getBoundingClientRect() }));
+        if (!candidates.length) return null;
+
+        const direct = candidates.find(({ rect }) => x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+        if (direct) return direct.el;
+
+        const sourceBlock = doc.blocks.find(item => item.id === sourceId);
+        if (sourceBlock?.type === 'image') {
+          const xAlignedImages = candidates
+            .filter(({ el, rect }) => doc.blocks.find(item => item.id === el.dataset.id)?.type === 'image' && x >= rect.left - 24 && x <= rect.right + 24)
+            .sort((a, b) => Math.abs(y - (a.rect.top + a.rect.height / 2)) - Math.abs(y - (b.rect.top + b.rect.height / 2)));
+          if (xAlignedImages.length) return xAlignedImages[0].el;
+        }
+
+        let nearest = null;
+        let nearestDistance = Infinity;
+        candidates.forEach(({ el, rect }) => {
+          const dx = x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
+          const dy = y < rect.top ? rect.top - y : y > rect.bottom ? y - rect.bottom : 0;
+          const distance = Math.hypot(dx, dy);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearest = el;
+          }
+        });
+        return nearestDistance <= 140 ? nearest : null;
+      }
+
+      function wireImageMove(frame, block, el) {
+        frame.addEventListener('pointerdown', event => {
+          if (event.button !== 0 || event.target.closest('.resize-handle')) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+
+          const startClientX = event.clientX;
+          const startClientY = event.clientY;
+          const startX = Number(block.x) || 0;
+          const startY = Number(block.y) || 0;
+          let moved = false;
+          frame.setPointerCapture?.(event.pointerId);
+
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startClientX;
+            const dy = moveEvent.clientY - startClientY;
+            if (!moved && Math.hypot(dx, dy) < 3) return;
+            moved = true;
+            document.body.classList.add('moving-image');
+            block.x = startX + dx;
+            block.y = startY + dy;
+            clampImagePosition(block, el);
+            applyImageGeometry(block, el);
+            ensurePaperHeight();
+          };
+
+          const onEnd = endEvent => {
+            frame.releasePointerCapture?.(endEvent.pointerId);
+            frame.removeEventListener('pointermove', onMove);
+            frame.removeEventListener('pointerup', onEnd);
+            frame.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('moving-image');
+            if (moved) scheduleSave(true);
+          };
+
+          frame.addEventListener('pointermove', onMove);
+          frame.addEventListener('pointerup', onEnd);
+          frame.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function blockTools(block) {
+        const tools = document.createElement('div');
+        tools.className = 'block-tools';
+        tools.innerHTML = `
+          <button class="mini drag-handle" draggable="true" title="끌어서 이동">⠿</button>
+          <button class="mini move-up" title="위로">↑</button>
+          <button class="mini move-down" title="아래로">↓</button>
+          <button class="mini duplicate" title="복제">⧉</button>
+          <button class="mini delete" title="삭제">×</button>`;
+        tools.querySelector('.move-up').addEventListener('click', e => { e.stopPropagation(); moveBlock(block.id, -1); });
+        tools.querySelector('.move-down').addEventListener('click', e => { e.stopPropagation(); moveBlock(block.id, 1); });
+        tools.querySelector('.duplicate').addEventListener('click', e => { e.stopPropagation(); duplicateBlock(block.id); });
+        tools.querySelector('.delete').addEventListener('click', e => { e.stopPropagation(); removeBlock(block.id); });
+        const handle = tools.querySelector('.drag-handle');
+        handle.addEventListener('dragstart', e => beginBlockDrag(e, block.id));
+        handle.addEventListener('dragend', endBlockDrag);
+        return tools;
+      }
+
+      function wireDropTarget(el, block) {
+        el.addEventListener('dragover', e => {
+          if (!dragId || dragId === block.id) return;
+          e.preventDefault();
+          const sourceBlock = doc.blocks.find(item => item.id === dragId);
+          const after = dropAfterTarget(e, block, el);
+          clearDropMarkers();
+          if (sourceBlock?.type === 'image' && block.type === 'image') {
+            el.classList.add(after ? 'drop-right' : 'drop-left');
+          } else {
+            el.classList.add(after ? 'drop-after' : 'drop-before');
+          }
+        });
+        el.addEventListener('drop', e => {
+          if (!dragId || dragId === block.id) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const sourceId = dragId;
+          const after = dropAfterTarget(e, block, el);
+          endBlockDrag();
+          reorderBlock(sourceId, block.id, after);
+        });
+      }
+
+      const TEXT_FONTS = [
+        { label: 'Pretendard / 기본', value: 'Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif' },
+        { label: '맑은 고딕', value: '"Malgun Gothic", "Noto Sans KR", sans-serif' },
+        { label: 'Noto Sans KR', value: '"Noto Sans KR", sans-serif' },
+        { label: 'Arial', value: 'Arial, sans-serif' },
+        { label: 'Georgia', value: 'Georgia, serif' },
+        { label: 'Times New Roman', value: '"Times New Roman", serif' },
+        { label: 'Courier New', value: '"Courier New", monospace' }
+      ];
+
+      function setTextFontSize(block, editable, range, numberInput, nextSize, saveHistory = false) {
+        block.fontSize = Math.round(Math.min(96, Math.max(8, Number(nextSize) || 16)));
+        editable.style.fontSize = `${block.fontSize}px`;
+        range.value = String(block.fontSize);
+        numberInput.value = String(block.fontSize);
+        scheduleSave(saveHistory);
+      }
+
+      function wireTextMove(handle, block, el) {
+        handle.addEventListener('pointerdown', event => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+          const startClientX = event.clientX;
+          const startClientY = event.clientY;
+          const startX = Number(block.x) || 0;
+          const startY = Number(block.y) || 0;
+          let moved = false;
+          handle.setPointerCapture?.(event.pointerId);
+
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startClientX;
+            const dy = moveEvent.clientY - startClientY;
+            if (!moved && Math.hypot(dx, dy) < 2) return;
+            moved = true;
+            document.body.classList.add('moving-text');
+            block.x = startX + dx;
+            block.y = startY + dy;
+            clampTextPosition(block, el);
+            applyTextGeometry(block, el);
+            ensurePaperHeight();
+          };
+
+          const onEnd = endEvent => {
+            handle.releasePointerCapture?.(endEvent.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('moving-text');
+            if (moved) scheduleSave(true);
+          };
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function wireTextResize(handle, corner, block, el) {
+        handle.addEventListener('pointerdown', event => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+          handle.setPointerCapture?.(event.pointerId);
+          document.body.classList.add('resizing-text');
+
+          const startX = event.clientX;
+          const startY = event.clientY;
+          const startLeft = Number(block.x) || 0;
+          const startTop = Number(block.y) || 0;
+          const startWidth = Math.max(120, Number(block.width) || 430);
+          const startHeight = Math.max(60, Number(block.height) || 140);
+          const fromLeft = corner.includes('w');
+          const fromTop = corner.includes('n');
+
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+            let nextWidth = fromLeft ? startWidth - dx : startWidth + dx;
+            let nextHeight = fromTop ? startHeight - dy : startHeight + dy;
+            nextWidth = Math.max(120, Math.min(paperEl.clientWidth, nextWidth));
+            nextHeight = Math.max(60, nextHeight);
+            block.width = Math.round(nextWidth);
+            block.height = Math.round(nextHeight);
+            if (fromLeft) block.x = startLeft + (startWidth - nextWidth);
+            if (fromTop) block.y = startTop + (startHeight - nextHeight);
+            clampTextPosition(block, el);
+            applyTextGeometry(block, el);
+            ensurePaperHeight();
+          };
+
+          const onEnd = endEvent => {
+            handle.releasePointerCapture?.(endEvent.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('resizing-text');
+            scheduleSave(true);
+          };
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function createTextBlock(block) {
+        const el = document.createElement('section');
+        el.className = 'block text-block';
+        el.dataset.id = block.id;
+        applyTextGeometry(block, el);
+        el.addEventListener('pointerdown', event => {
+          if (!event.target.closest('.text-controls, .text-resize-handle, .text-drag-bar')) selectBlock(block.id);
+        });
+
+        const stage = document.createElement('div');
+        stage.className = 'text-box-stage';
+
+        const dragBar = document.createElement('div');
+        dragBar.className = 'text-drag-bar';
+        dragBar.textContent = '⠿ 텍스트 상자 이동';
+        wireTextMove(dragBar, block, el);
+
+        const editable = document.createElement('div');
+        editable.className = 'text-box-editable';
+        editable.contentEditable = 'true';
+        editable.dataset.placeholder = '텍스트를 입력하세요…';
+        editable.innerHTML = sanitizeHTML(block.html);
+        editable.style.fontSize = `${Math.min(96, Math.max(8, Number(block.fontSize) || 16))}px`;
+        editable.style.fontFamily = block.fontFamily || TEXT_FONTS[0].value;
+        editable.addEventListener('focus', () => { activeEditable = editable; selectBlock(block.id); });
+        editable.addEventListener('input', () => {
+          block.html = sanitizeHTML(editable.innerHTML);
+          updateStats();
+          scheduleSave();
+        });
+        editable.addEventListener('paste', handlePaste);
+
+        const handles = ['nw', 'ne', 'sw', 'se'].map(corner => {
+          const handle = document.createElement('button');
+          handle.type = 'button';
+          handle.className = `text-resize-handle ${corner}`;
+          handle.title = '끌어서 텍스트 상자 크기 조절';
+          handle.setAttribute('aria-label', `${corner} 방향 텍스트 상자 크기 조절`);
+          wireTextResize(handle, corner, block, el);
+          return handle;
+        });
+
+        const controls = document.createElement('div');
+        controls.className = 'text-controls';
+        controls.addEventListener('pointerdown', event => event.stopPropagation());
+
+        const editTitle = document.createElement('div');
+        editTitle.className = 'edit-title';
+        editTitle.textContent = '텍스트 상자 편집';
+
+        const fontLabel = document.createElement('label');
+        fontLabel.textContent = '글꼴';
+        const fontSelect = document.createElement('select');
+        fontSelect.className = 'text-control-wide';
+        TEXT_FONTS.forEach(font => {
+          const option = document.createElement('option');
+          option.value = font.value;
+          option.textContent = font.label;
+          fontSelect.appendChild(option);
+        });
+        if (![...fontSelect.options].some(option => option.value === block.fontFamily)) {
+          const custom = document.createElement('option');
+          custom.value = block.fontFamily;
+          custom.textContent = '사용자 지정 글꼴';
+          fontSelect.appendChild(custom);
+        }
+        fontSelect.value = block.fontFamily || TEXT_FONTS[0].value;
+        fontSelect.addEventListener('change', () => {
+          block.fontFamily = fontSelect.value;
+          editable.style.fontFamily = block.fontFamily;
+          scheduleSave(true);
+        });
+
+        const sizeLabel = document.createElement('label');
+        sizeLabel.textContent = '글자 크기';
+        const sizeRange = document.createElement('input');
+        sizeRange.type = 'range';
+        sizeRange.min = '8';
+        sizeRange.max = '96';
+        sizeRange.value = String(block.fontSize || 16);
+        const sizeNumber = document.createElement('input');
+        sizeNumber.type = 'number';
+        sizeNumber.min = '8';
+        sizeNumber.max = '96';
+        sizeNumber.value = String(block.fontSize || 16);
+        sizeNumber.style.width = '62px';
+        sizeRange.addEventListener('input', () => setTextFontSize(block, editable, sizeRange, sizeNumber, sizeRange.value, false));
+        sizeRange.addEventListener('change', () => scheduleSave(true));
+        sizeNumber.addEventListener('input', () => setTextFontSize(block, editable, sizeRange, sizeNumber, sizeNumber.value, false));
+        sizeNumber.addEventListener('change', () => scheduleSave(true));
+
+        const buttons = document.createElement('div');
+        buttons.className = 'text-control-buttons';
+        const makeButton = (text, title, handler, danger = false) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = danger ? 'btn danger' : 'btn';
+          button.style.height = '28px';
+          button.textContent = text;
+          button.title = title;
+          button.addEventListener('click', event => { event.stopPropagation(); handler(); });
+          return button;
+        };
+        buttons.append(
+          makeButton('맨 앞으로', '이미지와 다른 텍스트보다 앞으로', () => changeImageLayer(block, 1)),
+          makeButton('맨 뒤로', '이미지와 다른 텍스트보다 뒤로', () => changeImageLayer(block, -1)),
+          makeButton('복제', '텍스트 상자 복제', () => duplicateBlock(block.id)),
+          makeButton('삭제', '텍스트 상자 삭제', () => removeBlock(block.id), true)
+        );
+
+        controls.append(editTitle, fontLabel, fontSelect, sizeLabel, sizeRange, sizeNumber, buttons);
+        stage.append(dragBar, editable, ...handles);
+        el.append(stage, controls);
+        return el;
+      }
+
+      function wireSceneMove(handle, block, el) {
+        handle.addEventListener('pointerdown', event => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+          const startClientX = event.clientX;
+          const startClientY = event.clientY;
+          const startX = Number(block.x) || 0;
+          const startY = Number(block.y) || 0;
+          let moved = false;
+          handle.setPointerCapture?.(event.pointerId);
+
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startClientX;
+            const dy = moveEvent.clientY - startClientY;
+            if (!moved && Math.hypot(dx, dy) < 2) return;
+            moved = true;
+            document.body.classList.add('moving-scene');
+            block.x = startX + dx;
+            block.y = startY + dy;
+            clampScenePosition(block, el);
+            applySceneGeometry(block, el);
+            ensurePaperHeight();
+          };
+
+          const onEnd = endEvent => {
+            handle.releasePointerCapture?.(endEvent.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('moving-scene');
+            if (moved) scheduleSave(true);
+          };
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function wireSceneResize(handle, corner, block, el) {
+        handle.addEventListener('pointerdown', event => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+          handle.setPointerCapture?.(event.pointerId);
+          document.body.classList.add('resizing-scene');
+
+          const startX = event.clientX;
+          const startY = event.clientY;
+          const startLeft = Number(block.x) || 0;
+          const startTop = Number(block.y) || 0;
+          const startWidth = Math.max(180, Number(block.width) || 560);
+          const startHeight = Math.max(64, Number(block.height) || 92);
+          const fromLeft = corner.includes('w');
+          const fromTop = corner.includes('n');
+
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+            let nextWidth = fromLeft ? startWidth - dx : startWidth + dx;
+            let nextHeight = fromTop ? startHeight - dy : startHeight + dy;
+            nextWidth = Math.max(180, Math.min(paperEl.clientWidth, nextWidth));
+            nextHeight = Math.max(64, nextHeight);
+            block.width = Math.round(nextWidth);
+            block.height = Math.round(nextHeight);
+            if (fromLeft) block.x = startLeft + (startWidth - nextWidth);
+            if (fromTop) block.y = startTop + (startHeight - nextHeight);
+            clampScenePosition(block, el);
+            applySceneGeometry(block, el);
+            ensurePaperHeight();
+          };
+
+          const onEnd = endEvent => {
+            handle.releasePointerCapture?.(endEvent.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('resizing-scene');
+            scheduleSave(true);
+          };
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function createSceneBlock(block, sceneNumber) {
+        const el = document.createElement('section');
+        el.className = 'block scene-block';
+        el.dataset.id = block.id;
+        applySceneGeometry(block, el);
+        el.addEventListener('pointerdown', event => {
+          if (!event.target.closest('.scene-controls, .scene-resize-handle, .scene-drag-bar')) selectBlock(block.id);
+        });
+
+        const stage = document.createElement('div');
+        stage.className = 'scene-box-stage';
+
+        const dragBar = document.createElement('div');
+        dragBar.className = 'scene-drag-bar';
+        dragBar.textContent = '⠿ 장면 탭 이동';
+        wireSceneMove(dragBar, block, el);
+
+        const number = document.createElement('div');
+        number.className = 'scene-number';
+        number.textContent = String(sceneNumber).padStart(2, '0');
+
+        const title = document.createElement('div');
+        title.className = 'scene-title';
+        title.contentEditable = 'true';
+        title.dataset.placeholder = '장면 제목';
+        title.textContent = block.title;
+        title.addEventListener('focus', () => { activeEditable = title; selectBlock(block.id); });
+        title.addEventListener('input', () => {
+          block.title = title.textContent.slice(0, 300);
+          updateStats();
+          scheduleSave();
+        });
+        title.addEventListener('paste', event => {
+          event.preventDefault();
+          document.execCommand('insertText', false, event.clipboardData.getData('text/plain'));
+        });
+
+        const handles = ['nw', 'ne', 'sw', 'se'].map(corner => {
+          const handle = document.createElement('button');
+          handle.type = 'button';
+          handle.className = `scene-resize-handle ${corner}`;
+          handle.title = '끌어서 장면 탭 크기 조절';
+          handle.setAttribute('aria-label', `${corner} 방향 장면 탭 크기 조절`);
+          wireSceneResize(handle, corner, block, el);
+          return handle;
+        });
+
+        const controls = document.createElement('div');
+        controls.className = 'scene-controls';
+        controls.addEventListener('pointerdown', event => event.stopPropagation());
+
+        const editTitle = document.createElement('div');
+        editTitle.className = 'edit-title';
+        editTitle.textContent = '장면 탭 편집';
+
+        const makeButton = (text, titleText, handler, danger = false) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = danger ? 'btn danger' : 'btn';
+          button.style.height = '28px';
+          button.textContent = text;
+          button.title = titleText;
+          button.addEventListener('click', event => { event.stopPropagation(); handler(); });
+          return button;
+        };
+
+        controls.append(
+          editTitle,
+          makeButton('맨 앞으로', '이미지와 텍스트보다 앞으로', () => changeImageLayer(block, 1)),
+          makeButton('맨 뒤로', '이미지와 텍스트보다 뒤로', () => changeImageLayer(block, -1)),
+          makeButton('복제', '장면 탭 복제', () => duplicateBlock(block.id)),
+          makeButton('삭제', '장면 탭 삭제', () => removeBlock(block.id), true)
+        );
+
+        stage.append(dragBar, number, title, ...handles);
+        el.append(stage, controls);
+        return el;
+      }
+
+      function imageGridSpan(width) {
+        return Math.min(20, Math.max(2, Math.round((Number(width) || 45) * 20 / 100)));
+      }
+
+      function setImageWidth(block, stage, range, value, container, nextWidth, saveHistory = false) {
+        block.width = Math.round(Math.min(100, Math.max(10, Number(nextWidth) || 45)));
+        container.style.width = `${block.width}%`;
+        range.value = String(block.width);
+        value.textContent = `${block.width}%`;
+        clampImagePosition(block, container);
+        applyImageGeometry(block, container);
+        ensurePaperHeight();
+        scheduleSave(saveHistory);
+      }
+
+      function wireImageResize(handle, side, block, stage, range, value, container) {
+        handle.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          selectBlock(block.id);
+          handle.setPointerCapture?.(e.pointerId);
+          document.body.classList.add('resizing-image');
+
+          const startX = e.clientX;
+          const startWidth = Number(block.width) || 45;
+          const startBlockX = Number(block.x) || 0;
+          const paperWidth = Math.max(1, paperEl.clientWidth);
+          const startPixelWidth = paperWidth * startWidth / 100;
+
+          const onMove = event => {
+            const direction = side === 'left' ? -1 : 1;
+            const deltaPercent = ((event.clientX - startX) * direction / paperWidth) * 100;
+            const nextWidth = Math.min(100, Math.max(10, startWidth + deltaPercent));
+            block.width = Math.round(nextWidth);
+            if (side === 'left') {
+              const nextPixelWidth = paperWidth * block.width / 100;
+              block.x = startBlockX - (nextPixelWidth - startPixelWidth);
+            }
+            setImageWidth(block, stage, range, value, container, block.width, false);
+          };
+
+          const onEnd = event => {
+            handle.releasePointerCapture?.(event.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('resizing-image');
+            scheduleSave(true);
+          };
+
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function createImageBlock(block) {
+        const el = document.createElement('figure');
+        el.className = 'block image-block';
+        el.dataset.id = block.id;
+        applyImageGeometry(block, el);
+
+        const stage = document.createElement('div');
+        stage.className = 'image-stage';
+
+        const frame = document.createElement('div');
+        frame.className = 'image-frame';
+        frame.title = '클릭하여 선택하고 끌어서 자유롭게 이동';
+
+        const moveHint = document.createElement('span');
+        moveHint.className = 'image-move-hint';
+        moveHint.textContent = '끌어서 이동';
+
+        const img = document.createElement('img');
+        img.src = block.src;
+        img.alt = block.alt || '스토리보드 이미지';
+        img.draggable = false;
+        img.addEventListener('load', () => requestAnimationFrame(ensurePaperHeight), { once: true });
+
+        const leftHandle = document.createElement('button');
+        leftHandle.type = 'button';
+        leftHandle.className = 'resize-handle left';
+        leftHandle.title = '마우스로 끌어 이미지 크기 조절';
+        leftHandle.setAttribute('aria-label', '왼쪽에서 이미지 크기 조절');
+        const rightHandle = document.createElement('button');
+        rightHandle.type = 'button';
+        rightHandle.className = 'resize-handle right';
+        rightHandle.title = '마우스로 끌어 이미지 크기 조절';
+        rightHandle.setAttribute('aria-label', '오른쪽에서 이미지 크기 조절');
+        frame.append(img, moveHint, leftHandle, rightHandle);
+        wireImageMove(frame, block, el);
+
+        const caption = document.createElement('figcaption');
+        caption.className = 'caption';
+        caption.contentEditable = 'true';
+        caption.dataset.placeholder = '이미지 설명 또는 대사를 입력하세요…';
+        caption.textContent = block.caption || '';
+        caption.addEventListener('focus', () => { activeEditable = caption; selectBlock(block.id); });
+        caption.addEventListener('input', () => { block.caption = caption.textContent.slice(0, 1000); updateStats(); ensurePaperHeight(); scheduleSave(); });
+        caption.addEventListener('paste', e => {
+          e.preventDefault();
+          document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+        });
+        stage.append(frame, caption);
+
+        const controls = document.createElement('div');
+        controls.className = 'image-controls';
+        controls.addEventListener('pointerdown', e => e.stopPropagation());
+
+        const editTitle = document.createElement('div');
+        editTitle.className = 'edit-title';
+        editTitle.textContent = '이미지 편집';
+        const label = document.createElement('span');
+        label.textContent = '크기';
+        const range = document.createElement('input');
+        range.type = 'range'; range.min = '10'; range.max = '100'; range.value = String(block.width);
+        const value = document.createElement('span');
+        value.textContent = `${block.width}%`;
+        range.addEventListener('input', () => setImageWidth(block, stage, range, value, el, range.value, false));
+        range.addEventListener('change', () => scheduleSave(true));
+
+        wireImageResize(leftHandle, 'left', block, stage, range, value, el);
+        wireImageResize(rightHandle, 'right', block, stage, range, value, el);
+
+        const makeButton = (text, title, handler, danger = false) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = danger ? 'btn danger' : 'btn';
+          button.style.height = '28px';
+          button.textContent = text;
+          button.title = title;
+          button.addEventListener('click', event => { event.stopPropagation(); handler(); });
+          return button;
+        };
+
+        const replace = makeButton('교체', '이미지 파일 교체', () => {
+          const picker = document.createElement('input');
+          picker.type = 'file'; picker.accept = 'image/*';
+          picker.addEventListener('change', async () => {
+            if (!picker.files?.[0]) return;
+            try {
+              block.src = await fileToDataURL(picker.files[0]);
+              block.alt = picker.files[0].name;
+              render();
+              scheduleSave();
+            } catch (error) { toast(error.message, true); }
+          });
+          picker.click();
+        });
+        const front = makeButton('맨 앞으로', '다른 이미지보다 앞으로', () => changeImageLayer(block, 1));
+        const back = makeButton('맨 뒤로', '다른 이미지보다 뒤로', () => changeImageLayer(block, -1));
+        const duplicate = makeButton('복제', '이미지 복제', () => duplicateBlock(block.id));
+        const remove = makeButton('삭제', '이미지 삭제', () => removeBlock(block.id), true);
+
+        controls.append(editTitle, label, range, value, front, back, replace, duplicate, remove);
+        el.append(stage, controls);
+        return el;
+      }
+
+      function renderSheetTabs() {
+        sheetTabsEl.innerHTML = '';
+        workbook.sheets.forEach(sheet => {
+          const tab = document.createElement('button');
+          tab.type = 'button';
+          tab.className = 'sheet-tab';
+          tab.dataset.sheetId = sheet.id;
+          tab.classList.toggle('active', sheet.id === workbook.activeSheetId);
+          tab.textContent = sheet.title || '제목 없는 시트';
+          tab.title = '클릭하여 전환 · 더블클릭하여 이름 변경 · 끌어서 순서 변경';
+          tab.draggable = true;
+          tab.addEventListener('click', e => {
+            clearTimeout(tab._clickTimer);
+            if (e.detail > 1) return;
+            tab._clickTimer = setTimeout(() => activateSheet(sheet.id), 180);
+          });
+          tab.addEventListener('dblclick', e => {
+            e.preventDefault();
+            clearTimeout(tab._clickTimer);
+            activateSheet(sheet.id, false);
+            renameCurrentSheet();
+          });
+          tab.addEventListener('dragstart', e => {
+            sheetDragId = sheet.id;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', sheet.id);
+            tab.classList.add('dragging');
+          });
+          tab.addEventListener('dragover', e => {
+            if (!sheetDragId || sheetDragId === sheet.id) return;
+            e.preventDefault();
+            tab.classList.add('drop-target');
+          });
+          tab.addEventListener('dragleave', () => tab.classList.remove('drop-target'));
+          tab.addEventListener('drop', e => {
+            if (!sheetDragId || sheetDragId === sheet.id) return;
+            e.preventDefault();
+            const from = workbook.sheets.findIndex(item => item.id === sheetDragId);
+            let to = workbook.sheets.findIndex(item => item.id === sheet.id);
+            if (from < 0 || to < 0) return;
+            const [moved] = workbook.sheets.splice(from, 1);
+            if (from < to) to--;
+            workbook.sheets.splice(to, 0, moved);
+            sheetDragId = null;
+            renderSheetTabs();
+            scheduleSave();
+          });
+          tab.addEventListener('dragend', () => {
+            sheetDragId = null;
+            document.querySelectorAll('.sheet-tab').forEach(item => item.classList.remove('dragging', 'drop-target'));
+          });
+          sheetTabsEl.appendChild(tab);
+        });
+      }
+
+      function render() {
+        doc = activeSheet();
+        if (!doc) return;
+        activeEditable = null;
+        titleInput.value = workbook.title;
+        documentTitle.textContent = doc.title;
+        paperEl.classList.toggle('storyboard-view', doc.view === 'storyboard');
+        viewToggle.textContent = doc.view === 'storyboard' ? '문서 보기' : '스토리보드 보기';
+        blocksEl.innerHTML = '';
+        imageLayerEl.innerHTML = '';
+        let sceneNumber = 0;
+        doc.blocks.forEach(block => {
+          let layerEl = null;
+          if (block.type === 'scene') {
+            sceneNumber++;
+            layerEl = createSceneBlock(block, sceneNumber);
+          } else if (block.type === 'image') {
+            layerEl = createImageBlock(block);
+          } else if (block.type === 'text') {
+            layerEl = createTextBlock(block);
+          }
+          if (layerEl) imageLayerEl.appendChild(layerEl);
+        });
+        emptyStateEl.classList.toggle('visible', doc.blocks.length === 0);
+        if (selectedId) selectBlock(selectedId);
+        renderSheetTabs();
+        updateStats();
+        requestAnimationFrame(() => {
+          imageLayerEl.querySelectorAll('.image-block, .text-block, .scene-block').forEach(el => {
+            const block = doc.blocks.find(item => item.id === el.dataset.id);
+            if (!block) return;
+            if (block.type === 'image') {
+              clampImagePosition(block, el);
+              applyImageGeometry(block, el);
+            } else if (block.type === 'text') {
+              clampTextPosition(block, el);
+              applyTextGeometry(block, el);
+            } else {
+              clampScenePosition(block, el);
+              applySceneGeometry(block, el);
+            }
+          });
+          ensurePaperHeight();
+        });
+      }
+
+      function textFromHTML(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || '';
+      }
+
+      function updateStats() {
+        const scenes = doc.blocks.filter(b => b.type === 'scene');
+        const images = doc.blocks.filter(b => b.type === 'image');
+        const text = doc.blocks.map(b => b.type === 'text' ? textFromHTML(b.html) : b.type === 'scene' ? b.title : b.caption).join(' ');
+        const chars = text.replace(/\s/g, '').length;
+        document.getElementById('wordCount').textContent = chars.toLocaleString('ko-KR');
+        document.getElementById('blockCount').textContent = doc.blocks.length.toLocaleString('ko-KR');
+        document.getElementById('sceneCount').textContent = scenes.length.toLocaleString('ko-KR');
+        document.getElementById('imageCount').textContent = images.length.toLocaleString('ko-KR');
+        documentMeta.textContent = `장면 ${scenes.length}개 · 이미지 ${images.length}개 · 글자 ${chars.toLocaleString('ko-KR')}자 · 시트 ${workbook.sheets.length}개`;
+        const outline = document.getElementById('outline');
+        outline.innerHTML = '';
+        if (!scenes.length) {
+          outline.innerHTML = '<div class="outline-empty">장면 구분 블록을 추가하면 여기에 목차가 표시됩니다.</div>';
+        } else {
+          scenes.forEach((scene, index) => {
+            const button = document.createElement('button');
+            button.className = 'outline-item';
+            button.innerHTML = `<strong>${String(index + 1).padStart(2, '0')}</strong>${escapeHTML(scene.title || '제목 없는 장면')}`;
+            button.addEventListener('click', () => {
+              document.querySelector(`.block[data-id="${CSS.escape(scene.id)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              selectBlock(scene.id);
+            });
+            outline.appendChild(button);
+          });
+        }
+      }
+
+      function escapeHTML(value) {
+        return String(value).replace(/[&<>'"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[ch]));
+      }
+
+      function handlePaste(e) {
+        const imageFiles = [...(e.clipboardData?.items || [])]
+          .filter(item => item.type.startsWith('image/'))
+          .map(item => item.getAsFile())
+          .filter(Boolean);
+        if (imageFiles.length) {
+          e.preventDefault();
+          addImages(imageFiles);
+        }
+      }
+
+      function execFormat(command, value = null) {
+        if (!activeEditable || !document.body.contains(activeEditable)) {
+          toast('먼저 텍스트 블록을 선택하세요.');
+          return;
+        }
+        activeEditable.focus();
+        document.execCommand(command, false, value);
+        const blockEl = activeEditable.closest('.block');
+        const block = doc.blocks.find(b => b.id === blockEl?.dataset.id);
+        if (block?.type === 'text') block.html = sanitizeHTML(activeEditable.innerHTML);
+        if (block?.type === 'scene') block.title = activeEditable.textContent.slice(0, 300);
+        scheduleSave();
+      }
+
+      function toast(message, isError = false) {
+        toastEl.textContent = message;
+        toastEl.style.background = isError ? '#9f3030' : '#292825';
+        toastEl.classList.add('show');
+        clearTimeout(toastEl._timer);
+        toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+      }
+
+      function downloadBlob(content, mime, filename) {
+        const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function safeFilename(name) {
+        return (name || 'storyboard').replace(/[\\/:*?"<>|]/g, '_').trim() || 'storyboard';
+      }
+
+      function exportJSON() {
+        downloadBlob(JSON.stringify(workbook, null, 2), 'application/json;charset=utf-8', `${safeFilename(workbook.title)}.storyboard.json`);
+        toast(`${workbook.sheets.length}개 시트를 한 파일로 저장했습니다.`);
+      }
+
+      function sheetReaderBody() {
+        return '';
+      }
+
+      function sheetReaderObjects(sheet) {
+        let sceneNumber = 0;
+        return sheet.blocks.map(block => {
+          if (block.type === 'scene') {
+            sceneNumber++;
+            return `<section class="reader-scene" style="left:${Math.max(0, Number(block.x) || 0)}px;top:${Math.max(0, Number(block.y) || 0)}px;width:${Math.max(180, Number(block.width) || 560)}px;height:${Math.max(64, Number(block.height) || 92)}px;z-index:${Number(block.z) || 1}"><div class="reader-scene-number">${String(sceneNumber).padStart(2, '0')}</div><h2>${escapeHTML(block.title)}</h2></section>`;
+          }
+          if (block.type === 'image') {
+            return `<figure class="reader-image" style="left:${Math.max(0, Number(block.x) || 0)}px;top:${Math.max(0, Number(block.y) || 0)}px;width:${Math.min(100, Math.max(10, Number(block.width) || 45))}%;z-index:${Number(block.z) || 1}"><img src="${block.src}" alt="${escapeHTML(block.alt)}"><figcaption>${escapeHTML(block.caption)}</figcaption></figure>`;
+          }
+          if (block.type === 'text') {
+            return `<section class="reader-text" style="left:${Math.max(0, Number(block.x) || 0)}px;top:${Math.max(0, Number(block.y) || 0)}px;width:${Math.max(120, Number(block.width) || 430)}px;height:${Math.max(60, Number(block.height) || 140)}px;z-index:${Number(block.z) || 1};font-size:${Math.min(96, Math.max(8, Number(block.fontSize) || 16))}px;font-family:${escapeHTML(block.fontFamily || 'inherit')}">${sanitizeHTML(block.html)}</section>`;
+          }
+          return '';
+        }).join('\n');
+      }
+
+      function readerPageHeight(sheet) {
+        const objectBottom = sheet.blocks.filter(block => block.type === 'image' || block.type === 'text' || block.type === 'scene').reduce((max, block) => {
+          const estimatedHeight = block.type === 'text'
+            ? Math.max(60, Number(block.height) || 140)
+            : block.type === 'scene'
+              ? Math.max(64, Number(block.height) || 92)
+              : 700;
+          return Math.max(max, (Number(block.y) || 0) + estimatedHeight);
+        }, 0);
+        return Math.max(1120, objectBottom + 170);
+      }
+
+      function buildReaderHTML() {
+        const nav = workbook.sheets.map((sheet, index) => `<a href="#sheet-${index + 1}">${escapeHTML(sheet.title)}</a>`).join('');
+        const pages = workbook.sheets.map((sheet, index) => `<main class="page" id="sheet-${index + 1}" style="min-height:${readerPageHeight(sheet)}px"><div class="sheet-label">SHEET ${String(index + 1).padStart(2, '0')}</div><h1>${escapeHTML(sheet.title)}</h1><div class="sheet-content">${sheetReaderBody(sheet)}</div><div class="image-layer">${sheetReaderObjects(sheet)}</div></main>`).join('\n');
+        return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHTML(workbook.title)}</title><style>*{box-sizing:border-box}body{margin:0;background:#efede7;color:#26231e;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif}.project-title{padding:24px;text-align:center;font-size:14px;font-weight:800}.sheet-nav{position:sticky;top:0;z-index:10;display:flex;gap:6px;overflow:auto;padding:8px 16px;background:#fff;border-bottom:1px solid #ddd}.sheet-nav a{padding:7px 11px;border-radius:7px;color:#3858d6;background:#eef1ff;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap}.page{position:relative;width:min(820px,100%);min-height:1120px;margin:30px auto;padding:70px 76px 100px;background:#fff;box-shadow:0 12px 40px #0002;overflow:visible}.sheet-label{position:relative;z-index:1;color:#3858d6;font-size:11px;font-weight:900;letter-spacing:.12em}h1{position:relative;z-index:1;font-size:34px;margin:4px 0 40px}.sheet-content{position:relative;z-index:1}.text{font-size:16px;line-height:1.8;margin:0 0 14px}.scene{margin:24px 0 2px;padding:18px 0 14px;border-top:2px solid;border-bottom:1px solid #ddd}.scene div{font:800 11px system-ui;color:#3858d6;letter-spacing:.12em}.scene h2{margin:5px 0 0;font:800 22px system-ui}.image-layer{position:absolute;inset:0;z-index:6;pointer-events:none}.image-layer .reader-image,.image-layer .reader-text,.image-layer .reader-scene{position:absolute;margin:0}.image-layer .reader-image{min-width:72px;text-align:center}.image-layer .reader-text{min-width:120px;min-height:60px;padding:14px 16px;border-radius:7px;background:rgba(255,255,255,.9);box-shadow:0 2px 12px #0001;overflow:hidden;line-height:1.55}.image-layer .reader-scene{min-width:180px;min-height:64px;padding:14px 18px;border-top:2px solid #26231e;border-bottom:1px solid #ddd;background:linear-gradient(90deg,rgba(56,88,214,.08),rgba(255,255,255,.92) 68%);overflow:hidden}.reader-scene-number{color:#3858d6;font:900 12px/1 system-ui;letter-spacing:.12em}.reader-scene h2{margin:7px 0 0;font:800 22px/1.25 system-ui}.image-layer img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;box-shadow:0 2px 14px #0002}.reader-text p{margin:0 0 .8em}.reader-text p:last-child{margin-bottom:0}.image-layer figcaption{margin-top:8px;color:#777;font:12px/1.5 system-ui}@media(max-width:760px){.page{margin:0;padding:40px 26px;box-shadow:none}.project-title{display:none}}@media print{body{background:#fff}.project-title,.sheet-nav{display:none}.page{margin:0;width:100%;box-shadow:none;break-after:page}.page:last-child{break-after:auto}}</style></head><body><div class="project-title">${escapeHTML(workbook.title)}</div><nav class="sheet-nav">${nav}</nav>${pages}</body></html>`;
+      }
+
+      function exportHTML() {
+        downloadBlob(buildReaderHTML(), 'text/html;charset=utf-8', `${safeFilename(workbook.title)}.html`);
+        toast('모든 시트를 포함한 읽기용 HTML을 저장했습니다.');
+      }
+
+      async function importJSON(file) {
+        try {
+          const text = await file.text();
+          workbook = normalizeDocument(JSON.parse(text));
+          doc = activeSheet();
+          selectedId = null;
+          activeEditable = null;
+          history = [];
+          historyIndex = -1;
+          render();
+          addHistorySnapshot();
+          await dbSet(workbook);
+          toast(`${workbook.sheets.length}개 시트를 불러왔습니다.`);
+        } catch (error) {
+          toast(error.message || '문서를 불러오지 못했습니다.', true);
+        }
+      }
+
+      async function newDocument() {
+        if (!confirm('현재 프로젝트를 새 프로젝트로 바꿀까요? 자동 저장된 내용도 새 프로젝트로 교체됩니다.')) return;
+        workbook = createDefaultWorkbook();
+        doc = activeSheet();
+        selectedId = null;
+        activeEditable = null;
+        history = [];
+        historyIndex = -1;
+        render();
+        addHistorySnapshot();
+        await dbSet(workbook);
+        toast('새 스토리보드 프로젝트를 만들었습니다.');
+      }
+
+      function uniqueSheetTitle(base) {
+        const used = new Set(workbook.sheets.map(sheet => sheet.title));
+        if (!used.has(base)) return base;
+        let number = 2;
+        while (used.has(`${base} ${number}`)) number++;
+        return `${base} ${number}`;
+      }
+
+      function addSheet() {
+        const sheet = createDefaultSheet(uniqueSheetTitle('새 스토리보드'));
+        workbook.sheets.push(sheet);
+        workbook.activeSheetId = sheet.id;
+        doc = sheet;
+        selectedId = null;
+        render();
+        scheduleSave();
+        toast('새 스토리보드 시트를 추가했습니다.');
+      }
+
+      function renameCurrentSheet() {
+        const name = prompt('스토리보드 시트 이름을 입력하세요.', doc.title);
+        if (name === null) return;
+        const trimmed = name.trim().slice(0, 80);
+        if (!trimmed) return toast('시트 이름은 비워 둘 수 없습니다.', true);
+        doc.title = trimmed;
+        documentTitle.textContent = trimmed;
+        renderSheetTabs();
+        scheduleSave();
+      }
+
+      function duplicateCurrentSheet() {
+        const index = workbook.sheets.findIndex(sheet => sheet.id === doc.id);
+        const copy = clone(doc);
+        copy.id = uid();
+        copy.title = uniqueSheetTitle(`${doc.title} 복사본`);
+        copy.blocks = copy.blocks.map(block => ({ ...block, id: uid() }));
+        workbook.sheets.splice(index + 1, 0, copy);
+        workbook.activeSheetId = copy.id;
+        doc = copy;
+        selectedId = null;
+        render();
+        scheduleSave();
+        toast('현재 시트를 복제했습니다.');
+      }
+
+      function deleteCurrentSheet() {
+        if (workbook.sheets.length <= 1) return toast('프로젝트에는 최소 한 개의 시트가 필요합니다.', true);
+        if (!confirm(`“${doc.title}” 시트를 삭제할까요?`)) return;
+        const index = workbook.sheets.findIndex(sheet => sheet.id === doc.id);
+        workbook.sheets.splice(index, 1);
+        const next = workbook.sheets[Math.min(index, workbook.sheets.length - 1)];
+        workbook.activeSheetId = next.id;
+        doc = next;
+        selectedId = null;
+        render();
+        scheduleSave();
+        toast('시트를 삭제했습니다.');
+      }
+
+      function switchRelativeSheet(direction) {
+        const index = workbook.sheets.findIndex(sheet => sheet.id === workbook.activeSheetId);
+        const next = Math.min(workbook.sheets.length - 1, Math.max(0, index + direction));
+        if (next !== index) activateSheet(workbook.sheets[next].id);
+      }
+
+      // Top-level events
+      titleInput.addEventListener('input', () => {
+        workbook.title = titleInput.value.slice(0, 120);
+        scheduleSave();
+      });
+
+      documentTitle.contentEditable = 'true';
+      documentTitle.dataset.placeholder = '스토리보드 시트 이름';
+      documentTitle.addEventListener('input', () => {
+        doc.title = documentTitle.textContent.slice(0, 80);
+        const currentTab = sheetTabsEl.querySelector(`.sheet-tab[data-sheet-id="${CSS.escape(doc.id)}"]`);
+        if (currentTab) currentTab.textContent = doc.title || '제목 없는 시트';
+        scheduleSave();
+      });
+      documentTitle.addEventListener('blur', () => {
+        if (!doc.title.trim()) {
+          doc.title = '제목 없는 스토리보드';
+          documentTitle.textContent = doc.title;
+          renderSheetTabs();
+          scheduleSave();
+        }
+      });
+      documentTitle.addEventListener('paste', e => {
+        e.preventDefault();
+        document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+      });
+
+      ['addTextTop','addTextSide'].forEach(id => document.getElementById(id).addEventListener('click', addText));
+      ['addSceneTop','addSceneSide'].forEach(id => document.getElementById(id).addEventListener('click', addScene));
+      ['addImageTop','addImageSide'].forEach(id => document.getElementById(id).addEventListener('click', requestImage));
+
+      imageInput.addEventListener('change', () => {
+        if (imageInput.files?.length) addImages(imageInput.files);
+        imageInput.value = '';
+      });
+
+      document.querySelectorAll('.format-command').forEach(button => button.addEventListener('click', () => execFormat(button.dataset.command)));
+      document.getElementById('formatBlock').addEventListener('change', e => execFormat('formatBlock', e.target.value));
+      document.getElementById('undoBtn').addEventListener('click', undo);
+      document.getElementById('redoBtn').addEventListener('click', redo);
+      document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+      viewToggle.addEventListener('click', () => {
+        doc.view = doc.view === 'document' ? 'storyboard' : 'document';
+        render();
+        scheduleSave();
+      });
+
+      document.getElementById('addSheetBtn').addEventListener('click', addSheet);
+      document.getElementById('renameSheetBtn').addEventListener('click', renameCurrentSheet);
+      document.getElementById('duplicateSheetBtn').addEventListener('click', duplicateCurrentSheet);
+      document.getElementById('deleteSheetBtn').addEventListener('click', deleteCurrentSheet);
+
+      document.getElementById('fileMenuBtn').addEventListener('click', e => { e.stopPropagation(); fileMenu.classList.toggle('open'); });
+      document.addEventListener('click', () => fileMenu.classList.remove('open'));
+      document.getElementById('newBtn').addEventListener('click', newDocument);
+      document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+      document.getElementById('importJsonBtn').addEventListener('click', () => jsonInput.click());
+      document.getElementById('exportHtmlBtn').addEventListener('click', exportHTML);
+      jsonInput.addEventListener('change', () => { if (jsonInput.files?.[0]) importJSON(jsonInput.files[0]); jsonInput.value = ''; });
+
+      paperEl.addEventListener('click', e => {
+        if (!e.target.closest('.block') && e.target !== documentTitle) selectBlock(null);
+      });
+
+      blocksEl.addEventListener('dragover', e => {
+        if (!dragId || e.target.closest('.block')) return;
+        e.preventDefault();
+      });
+      blocksEl.addEventListener('drop', e => {
+        if (!dragId || e.target.closest('.block')) return;
+        e.preventDefault();
+        const sourceId = dragId;
+        endBlockDrag();
+        const sourceIndex = doc.blocks.findIndex(block => block.id === sourceId);
+        if (sourceIndex < 0) return;
+        const [item] = doc.blocks.splice(sourceIndex, 1);
+        doc.blocks.push(item);
+        selectedId = sourceId;
+        render();
+        scheduleSave();
+      });
+
+      paperEl.addEventListener('dragover', e => {
+        if ([...(e.dataTransfer?.items || [])].some(item => item.kind === 'file' && item.type.startsWith('image/'))) e.preventDefault();
+      });
+      paperEl.addEventListener('drop', e => {
+        const files = [...(e.dataTransfer?.files || [])].filter(file => file.type.startsWith('image/'));
+        if (!files.length || dragId) return;
+        e.preventDefault();
+        const rect = paperEl.getBoundingClientRect();
+        const placement = {
+          x: Math.max(0, e.clientX - rect.left - 120),
+          y: Math.max(0, e.clientY - rect.top - 80)
+        };
+        addImages(files, doc.blocks.length, placement);
+      });
+
+      document.addEventListener('paste', e => {
+        if (e.target.closest('[contenteditable="true"]')) return;
+        const files = [...(e.clipboardData?.items || [])].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile()).filter(Boolean);
+        if (files.length) { e.preventDefault(); addImages(files); }
+      });
+
+      document.addEventListener('keydown', e => {
+        const mod = e.ctrlKey || e.metaKey;
+        if (mod && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          exportJSON();
+        }
+        if (mod && e.key.toLowerCase() === 'z' && !e.target.closest('[contenteditable="true"]')) {
+          e.preventDefault();
+          e.shiftKey ? redo() : undo();
+        }
+        if (mod && e.key.toLowerCase() === 'y' && !e.target.closest('[contenteditable="true"]')) {
+          e.preventDefault(); redo();
+        }
+        if (mod && e.key === 'PageUp') {
+          e.preventDefault(); switchRelativeSheet(-1);
+        }
+        if (mod && e.key === 'PageDown') {
+          e.preventDefault(); switchRelativeSheet(1);
+        }
+      });
+
+      async function init() {
+        try {
+          const saved = await dbGet();
+          if (saved) workbook = normalizeDocument(saved);
+        } catch (error) {
+          console.warn('저장 문서를 불러오지 못했습니다.', error);
+        }
+        doc = activeSheet();
+        render();
+        addHistorySnapshot();
+      }
+
+      init();
+    })();
+
+  </script>
+</body>
+</html>
