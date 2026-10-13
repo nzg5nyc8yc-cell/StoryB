@@ -516,7 +516,7 @@
       cursor: pointer;
       font-weight: 800;
     }
-    .sheet-add { width: 32px; color: var(--accent); font-size: 18px; }
+    .sheet-add { width: auto; min-width: 32px; padding: 0 10px; color: var(--accent); font-size: 12px; white-space: nowrap; }
     .sheet-action { padding: 0 9px; color: var(--muted); font-size: 11px; }
     .sheet-add:hover, .sheet-action:hover { color: var(--ink); border-color: #99938a; }
     .sheet-action.delete-sheet:hover { color: var(--danger); }
@@ -856,6 +856,145 @@
     body.moving-text, body.moving-text * { cursor: move !important; user-select: none !important; }
     body.resizing-text, body.resizing-text * { user-select: none !important; }
 
+    /* 자유 배치 MP4 영상 */
+    .image-layer .video-block {
+      position: absolute;
+      display: block;
+      min-width: 48px;
+      min-height: 32px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 7px;
+      background: #111;
+      box-shadow: 0 2px 14px rgba(0,0,0,.16);
+      pointer-events: auto;
+      overflow: visible;
+      touch-action: none;
+    }
+    .image-layer .video-block.selected {
+      z-index: 10000 !important;
+      box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0,0,0,.22);
+    }
+    .video-stage { position: relative; width: 100%; height: 100%; min-height: inherit; }
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 7px;
+      background: #111;
+    }
+    .video-viewport video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      max-width: none;
+      user-select: none;
+      background: #111;
+      transform-origin: center center;
+    }
+    .video-drag-bar {
+      position: absolute;
+      left: 50%;
+      top: -31px;
+      z-index: 30;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      height: 25px;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 999px;
+      color: white;
+      background: rgba(31,31,29,.86);
+      box-shadow: 0 4px 12px rgba(0,0,0,.18);
+      cursor: move;
+      user-select: none;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      touch-action: none;
+    }
+    .image-layer .video-block.selected .video-drag-bar { display: flex; }
+    .video-resize-handle {
+      position: absolute;
+      z-index: 31;
+      display: none;
+      width: 14px;
+      height: 14px;
+      padding: 0;
+      border: 2px solid white;
+      border-radius: 4px;
+      background: var(--accent);
+      box-shadow: 0 2px 7px rgba(0,0,0,.24);
+      touch-action: none;
+    }
+    .image-layer .video-block.selected .video-resize-handle { display: block; }
+    .video-resize-handle.nw { left: -8px; top: -8px; cursor: nwse-resize; }
+    .video-resize-handle.ne { right: -8px; top: -8px; cursor: nesw-resize; }
+    .video-resize-handle.sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
+    .video-resize-handle.se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+    .video-controls-panel {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 12px);
+      z-index: 32;
+      display: none;
+      width: max(430px, 100%);
+      max-width: min(650px, calc(100vw - 80px));
+      grid-template-columns: auto minmax(110px,1fr) 64px;
+      align-items: center;
+      gap: 8px;
+      padding: 11px;
+      border: 1px solid #cfc9be;
+      border-radius: 10px;
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 12px 30px rgba(0,0,0,.2);
+      color: var(--muted);
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+    }
+    .image-layer .video-block.selected .video-controls-panel { display: grid; }
+    .video-controls-panel .edit-title { grid-column: 1/-1; color: var(--ink); font-size: 12px; font-weight: 900; }
+    .video-controls-panel input[type="range"] { min-width: 110px; accent-color: var(--accent); }
+    .video-controls-panel input[type="number"] { height: 29px; width: 64px; border:1px solid var(--line); border-radius:7px; padding:0 6px; }
+    .video-control-buttons { grid-column: 1/-1; display:flex; flex-wrap:wrap; gap:6px; padding-top:3px; }
+    body.moving-video, body.moving-video * { cursor: move !important; user-select: none !important; }
+    body.resizing-video, body.resizing-video * { user-select: none !important; }
+    body.cropping-video, body.cropping-video * { user-select: none !important; }
+    .video-block.crop-mode.selected {
+      box-shadow: 0 0 0 2px #d78120, 0 8px 24px rgba(0,0,0,.22);
+    }
+    .video-block.crop-mode.selected .video-viewport {
+      outline: 1px dashed rgba(215,129,32,.9);
+      outline-offset: -1px;
+    }
+    .video-block.crop-mode .video-resize-handle {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      border-color: #fff5df;
+      background: #d78120;
+      box-shadow: 0 2px 8px rgba(118,65,9,.35);
+    }
+    .video-block.crop-mode .video-resize-handle.nw { left: -9px; top: -9px; }
+    .video-block.crop-mode .video-resize-handle.ne { right: -9px; top: -9px; }
+    .video-block.crop-mode .video-resize-handle.sw { left: -9px; bottom: -9px; }
+    .video-block.crop-mode .video-resize-handle.se { right: -9px; bottom: -9px; }
+    .video-crop-hint {
+      grid-column: 1/-1;
+      margin-top: -2px;
+      padding: 6px 8px;
+      border-radius: 7px;
+      background: #f4f0e8;
+      color: #6e685f;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
     @media (max-width: 1100px) {
       .workspace { grid-template-columns: 190px minmax(480px, 1fr); }
       .inspector { display: none; }
@@ -884,7 +1023,7 @@
 
     @media print {
       body { background: white; overflow: visible; }
-      .topbar, .toolbar, .sidebar, .inspector, .sheetbar, .statusbar, .block-tools, .image-controls, .text-controls, .resize-handle, .text-resize-handle, .text-drag-bar, .toast { display: none !important; }
+      .topbar, .toolbar, .sidebar, .inspector, .sheetbar, .statusbar, .block-tools, .image-controls, .text-controls, .video-controls-panel, .resize-handle, .text-resize-handle, .video-resize-handle, .text-drag-bar, .video-drag-bar, .toast { display: none !important; }
       .app, .workspace, .canvas-wrap { display: block; height: auto; overflow: visible; padding: 0; }
       .paper, .paper.storyboard-view { width: 100%; min-height: 0; padding: 15mm 18mm; border: 0; box-shadow: none; background: white; }
       .block, .storyboard-view .block { break-inside: avoid; box-shadow: none; }
@@ -1043,7 +1182,7 @@
         <div class="logo">S</div>
         <div class="brand-name-wrap">
           <div class="brand-name">Story Canvas</div>
-          <span class="brand-sub">텍스트와 이미지로 만드는 스토리보드</span>
+          <span class="brand-sub">텍스트·이미지·MP4로 만드는 스토리보드</span>
         </div>
       </div>
 
@@ -1086,6 +1225,7 @@
       <div class="tool-group">
         <button id="addTextTop" class="btn" type="button">＋ 텍스트</button>
         <button id="addImageTop" class="btn" type="button">＋ 이미지</button>
+        <button id="addVideoTop" class="btn" type="button">＋ MP4</button>
         <button id="addSceneTop" class="btn" type="button">＋ 장면</button>
       </div>
       <span class="divider"></span>
@@ -1107,6 +1247,10 @@
             <span class="insert-icon">▧</span>
             <span><strong>이미지</strong><span>이미지를 불러와 자유롭게 겹쳐 배치합니다.</span></span>
           </button>
+          <button id="addVideoSide" class="insert-card" type="button">
+            <span class="insert-icon">▶</span>
+            <span><strong>MP4 클립</strong><span>영상을 끌어 넣고 크기와 보이는 영역을 조절합니다.</span></span>
+          </button>
           <button id="addSceneSide" class="insert-card" type="button">
             <span class="insert-icon">#</span>
             <span><strong>장면 구분</strong><span>장면 제목과 번호를 만듭니다.</span></span>
@@ -1116,7 +1260,7 @@
         <div class="side-section">
           <div class="panel-title">사용 팁</div>
           <div class="tip">
-            이미지·텍스트 상자·장면 탭은 자유롭게 겹쳐 배치할 수 있습니다. 오브젝트를 클릭하면 편집 메뉴가 열리고, 이동 손잡이와 네 모서리로 위치와 크기를 조절할 수 있습니다.
+            이미지·MP4·텍스트 상자·장면 탭은 자유롭게 겹쳐 배치할 수 있습니다. MP4는 선택 후 크기와 비파괴 크롭(확대·초점)을 조절할 수 있습니다.
           </div>
         </div>
       </aside>
@@ -1124,7 +1268,7 @@
       <section class="canvas-wrap" id="canvasWrap">
         <article class="paper" id="paper">
           <header class="document-heading">
-            <h1 class="document-title" id="documentTitle" contenteditable="true" data-placeholder="스토리보드 시트 이름">스토리보드 1</h1>
+            <h1 class="document-title" id="documentTitle" contenteditable="true" data-placeholder="시나리오 이름">시나리오 1</h1>
             <div class="document-meta" id="documentMeta">장면 1개 · 이미지 0개</div>
           </header>
           <div id="blocks"></div>
@@ -1142,6 +1286,7 @@
           <div class="stat"><div id="blockCount" class="stat-value">0</div><div class="stat-label">전체 블록</div></div>
           <div class="stat"><div id="sceneCount" class="stat-value">0</div><div class="stat-label">장면</div></div>
           <div class="stat"><div id="imageCount" class="stat-value">0</div><div class="stat-label">이미지</div></div>
+          <div class="stat"><div id="videoCount" class="stat-value">0</div><div class="stat-label">MP4</div></div>
         </div>
 
         <div class="side-section">
@@ -1151,22 +1296,23 @@
       </aside>
     </main>
 
-    <div class="sheetbar" aria-label="스토리보드 시트">
-      <button id="addSheetBtn" class="sheet-add" type="button" title="새 스토리보드 시트 추가">＋</button>
+    <div class="sheetbar" aria-label="시나리오 탭">
+      <button id="addSheetBtn" class="sheet-add" type="button" title="새 시나리오 추가">＋ 새 시나리오</button>
       <div id="sheetTabs" class="sheet-tabs"></div>
-      <button id="renameSheetBtn" class="sheet-action" type="button" title="현재 시트 이름 변경">이름 변경</button>
-      <button id="duplicateSheetBtn" class="sheet-action" type="button" title="현재 시트 복제">복제</button>
-      <button id="deleteSheetBtn" class="sheet-action delete-sheet" type="button" title="현재 시트 삭제">삭제</button>
+      <button id="renameSheetBtn" class="sheet-action" type="button" title="현재 시나리오 이름 변경">이름 변경</button>
+      <button id="duplicateSheetBtn" class="sheet-action" type="button" title="현재 시나리오 복제">복제</button>
+      <button id="deleteSheetBtn" class="sheet-action delete-sheet" type="button" title="현재 시나리오 삭제">삭제</button>
     </div>
 
     <footer class="statusbar">
       <span id="selectionStatus">블록을 선택하세요</span>
-      <span>Ctrl/Cmd+S: 모든 시트 저장 · 텍스트/이미지/장면 탭 자유 이동 및 겹치기 가능</span>
+      <span>Ctrl/Cmd+S: 모든 시나리오 저장 · 텍스트/이미지/MP4/장면 자유 이동 및 겹치기 가능</span>
       <span id="saveState" class="save-state">자동 저장됨</span>
     </footer>
   </div>
 
   <input id="imageInput" type="file" accept="image/*" multiple />
+  <input id="videoInput" type="file" accept="video/mp4,.mp4" multiple />
   <input id="jsonInput" type="file" accept="application/json,.json" />
   <div id="toast" class="toast"></div>
 
@@ -1186,6 +1332,7 @@
       const documentTitle = document.getElementById('documentTitle');
       const documentMeta = document.getElementById('documentMeta');
       const imageInput = document.getElementById('imageInput');
+      const videoInput = document.getElementById('videoInput');
       const jsonInput = document.getElementById('jsonInput');
       const toastEl = document.getElementById('toast');
       const fileMenu = document.getElementById('fileMenu');
@@ -1214,7 +1361,7 @@
         ];
       }
 
-      function createDefaultSheet(title = '스토리보드 1') {
+      function createDefaultSheet(title = '시나리오 1') {
         return {
           id: uid(),
           title,
@@ -1226,7 +1373,7 @@
       function createDefaultWorkbook() {
         const firstSheet = createDefaultSheet();
         return {
-          version: 6,
+          version: 9,
           title: '스토리보드 프로젝트',
           activeSheetId: firstSheet.id,
           updatedAt: new Date().toISOString(),
@@ -1276,14 +1423,48 @@
           const hasX = block.x !== undefined && block.x !== null && Number.isFinite(Number(block.x));
           const hasY = block.y !== undefined && block.y !== null && Number.isFinite(Number(block.y));
           const hasZ = block.z !== undefined && block.z !== null && Number.isFinite(Number(block.z));
+          const width = Math.min(100, Math.max(10, Number(block.width) || 45));
           return {
             id: uid(), type: 'image', src: String(block.src || ''),
             alt: String(block.alt || '스토리보드 이미지').slice(0, 300),
             caption: String(block.caption || '').slice(0, 1000),
-            width: Math.min(100, Math.max(10, Number(block.width) || 45)),
+            width,
+            originalSrc: String(block.originalSrc || block.src || ''),
+            originalAlt: String(block.originalAlt || block.alt || '스토리보드 이미지').slice(0, 300),
+            originalWidth: Math.min(100, Math.max(10, Number(block.originalWidth) || width)),
             x: hasX ? Math.max(0, Number(block.x)) : 86 + (index % 5) * 22,
             y: hasY ? Math.max(0, Number(block.y)) : 170 + index * 34,
             z: hasZ ? Number(block.z) : index + 1
+          };
+        }
+        if (block?.type === 'video') {
+          const hasX = block.x !== undefined && block.x !== null && Number.isFinite(Number(block.x));
+          const hasY = block.y !== undefined && block.y !== null && Number.isFinite(Number(block.y));
+          const hasZ = block.z !== undefined && block.z !== null && Number.isFinite(Number(block.z));
+          const width = Math.max(48, Number(block.width) || 420);
+          const height = Math.max(32, Number(block.height) || 236);
+          const legacyZoom = Math.min(3, Math.max(1, Number(block.cropZoom) || 1));
+          const legacyCropX = Math.min(100, Math.max(0, Number(block.cropX ?? 50)));
+          const legacyCropY = Math.min(100, Math.max(0, Number(block.cropY ?? 50)));
+          const hasMediaGeometry = [block.mediaWidth, block.mediaHeight, block.mediaOffsetX, block.mediaOffsetY].every(value => Number.isFinite(Number(value)));
+          const mediaWidth = hasMediaGeometry ? Math.max(width, Number(block.mediaWidth)) : width * legacyZoom;
+          const mediaHeight = hasMediaGeometry ? Math.max(height, Number(block.mediaHeight)) : height * legacyZoom;
+          const mediaOffsetX = hasMediaGeometry ? Number(block.mediaOffsetX) : -Math.max(0, mediaWidth - width) * (legacyCropX / 100);
+          const mediaOffsetY = hasMediaGeometry ? Number(block.mediaOffsetY) : -Math.max(0, mediaHeight - height) * (legacyCropY / 100);
+          return {
+            id: uid(), type: 'video', src: String(block.src || ''),
+            name: String(block.name || block.alt || 'MP4 클립').slice(0, 300),
+            originalSrc: String(block.originalSrc || block.src || ''),
+            originalName: String(block.originalName || block.name || block.alt || 'MP4 클립').slice(0, 300),
+            originalWidth: Math.max(48, Number(block.originalWidth) || width),
+            originalHeight: Math.max(32, Number(block.originalHeight) || height),
+            x: hasX ? Math.max(0, Number(block.x)) : 86 + (index % 4) * 24,
+            y: hasY ? Math.max(0, Number(block.y)) : 190 + index * 38,
+            width, height,
+            mediaWidth, mediaHeight, mediaOffsetX, mediaOffsetY,
+            z: hasZ ? Number(block.z) : index + 1,
+            muted: block.muted !== false,
+            loop: block.loop !== false
           };
         }
         if (block?.type === 'scene') {
@@ -1320,7 +1501,7 @@
       function normalizeSheet(sheet, index = 0) {
         return {
           id: uid(),
-          title: String(sheet?.title || sheet?.name || `스토리보드 ${index + 1}`).slice(0, 80),
+          title: String(sheet?.title || sheet?.name || `시나리오 ${index + 1}`).slice(0, 80),
           view: sheet?.view === 'storyboard' ? 'storyboard' : 'document',
           blocks: Array.isArray(sheet?.blocks) ? sheet.blocks.map((block, blockIndex) => normalizeBlock(block, blockIndex)) : []
         };
@@ -1334,7 +1515,7 @@
           const sheets = data.sheets.map(normalizeSheet);
           if (!sheets.length) sheets.push(createDefaultSheet());
           return {
-            version: 6,
+            version: 9,
             title: String(data.title || '스토리보드 프로젝트').slice(0, 120),
             activeSheetId: sheets[Math.min(activeIndex, sheets.length - 1)].id,
             updatedAt: new Date().toISOString(),
@@ -1344,12 +1525,12 @@
 
         if (Array.isArray(data.blocks)) {
           const sheet = normalizeSheet({
-            title: data.title || '스토리보드 1',
+            title: data.title || '시나리오 1',
             view: data.view,
             blocks: data.blocks
           });
           return {
-            version: 6,
+            version: 9,
             title: String(data.title || '스토리보드 프로젝트').slice(0, 120),
             activeSheetId: sheet.id,
             updatedAt: new Date().toISOString(),
@@ -1445,7 +1626,7 @@
         selectedId = id;
         document.querySelectorAll('.block').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
         const block = doc.blocks.find(b => b.id === id);
-        document.getElementById('selectionStatus').textContent = block ? `${block.type === 'text' ? '텍스트' : block.type === 'image' ? '이미지' : '장면'} 블록 선택됨` : '블록을 선택하세요';
+        document.getElementById('selectionStatus').textContent = block ? `${block.type === 'text' ? '텍스트' : block.type === 'image' ? '이미지' : block.type === 'video' ? 'MP4' : '장면'} 블록 선택됨` : '블록을 선택하세요';
         if (focus) {
           const target = document.querySelector(`.block[data-id="${CSS.escape(id)}"] [contenteditable="true"]`);
           target?.focus();
@@ -1492,13 +1673,14 @@
       }
 
       function requestImage() { imageInput.click(); }
+      function requestVideo() { videoInput.click(); }
 
       function maxImageZ() {
-        return doc.blocks.reduce((max, block) => (block.type === 'image' || block.type === 'text' || block.type === 'scene') ? Math.max(max, Number(block.z) || 0) : max, 0);
+        return doc.blocks.reduce((max, block) => (block.type === 'image' || block.type === 'video' || block.type === 'text' || block.type === 'scene') ? Math.max(max, Number(block.z) || 0) : max, 0);
       }
 
       function minImageZ() {
-        const values = doc.blocks.filter(block => block.type === 'image' || block.type === 'text' || block.type === 'scene').map(block => Number(block.z) || 0);
+        const values = doc.blocks.filter(block => block.type === 'image' || block.type === 'video' || block.type === 'text' || block.type === 'scene').map(block => Number(block.z) || 0);
         return values.length ? Math.min(...values) : 0;
       }
 
@@ -1521,6 +1703,66 @@
         el.style.top = `${Math.round(Number(block.y) || 0)}px`;
         el.style.width = `${Math.min(100, Math.max(10, Number(block.width) || 45))}%`;
         el.style.zIndex = String(Number(block.z) || 1);
+      }
+
+      function clampVideoPosition(block, el) {
+        const width = Math.max(48, Number(block.width) || el?.offsetWidth || 420);
+        const maxX = Math.max(0, paperEl.clientWidth - width);
+        block.x = Math.min(maxX, Math.max(0, Number(block.x) || 0));
+        block.y = Math.max(0, Number(block.y) || 0);
+      }
+
+      function normalizeVideoMediaGeometry(block) {
+        const frameWidth = Math.max(48, Number(block.width) || 420);
+        const frameHeight = Math.max(32, Number(block.height) || 236);
+        block.mediaWidth = Math.max(frameWidth, Number(block.mediaWidth) || frameWidth);
+        block.mediaHeight = Math.max(frameHeight, Number(block.mediaHeight) || frameHeight);
+        const minOffsetX = Math.min(0, frameWidth - block.mediaWidth);
+        const minOffsetY = Math.min(0, frameHeight - block.mediaHeight);
+        block.mediaOffsetX = Math.min(0, Math.max(minOffsetX, Number(block.mediaOffsetX) || 0));
+        block.mediaOffsetY = Math.min(0, Math.max(minOffsetY, Number(block.mediaOffsetY) || 0));
+      }
+
+      function applyVideoGeometry(block, el) {
+        block.width = Math.max(48, Number(block.width) || 420);
+        block.height = Math.max(32, Number(block.height) || 236);
+        normalizeVideoMediaGeometry(block);
+        el.style.left = `${Math.round(Number(block.x) || 0)}px`;
+        el.style.top = `${Math.round(Number(block.y) || 0)}px`;
+        el.style.width = `${Math.round(block.width)}px`;
+        el.style.height = `${Math.round(block.height)}px`;
+        el.style.zIndex = String(Number(block.z) || 1);
+        const video = el.querySelector('video');
+        if (video) {
+          video.style.left = `${block.mediaOffsetX}px`;
+          video.style.top = `${block.mediaOffsetY}px`;
+          video.style.width = `${block.mediaWidth}px`;
+          video.style.height = `${block.mediaHeight}px`;
+          video.style.right = 'auto';
+          video.style.bottom = 'auto';
+          video.style.transform = 'none';
+          video.style.objectPosition = 'center center';
+          video.muted = block.muted !== false;
+          video.loop = block.loop !== false;
+        }
+      }
+
+      function resizeVideoFrame(block, el, nextWidth, nextHeight) {
+        const startWidth = Math.max(48, Number(block.width) || 420);
+        const startHeight = Math.max(32, Number(block.height) || 236);
+        normalizeVideoMediaGeometry(block);
+        const scaleX = Math.max(0.01, Number(nextWidth) / startWidth);
+        const scaleY = Math.max(0.01, Number(nextHeight) / startHeight);
+        block.width = Math.max(48, Math.round(Number(nextWidth) || startWidth));
+        block.height = Math.max(32, Math.round(Number(nextHeight) || startHeight));
+        block.mediaWidth *= scaleX;
+        block.mediaHeight *= scaleY;
+        block.mediaOffsetX *= scaleX;
+        block.mediaOffsetY *= scaleY;
+        normalizeVideoMediaGeometry(block);
+        clampVideoPosition(block, el);
+        applyVideoGeometry(block, el);
+        ensurePaperHeight();
       }
 
       function clampTextPosition(block, el) {
@@ -1561,7 +1803,7 @@
       function ensurePaperHeight() {
         const contentBottom = Math.max(1120, blocksEl.offsetTop + blocksEl.scrollHeight + 110);
         let objectBottom = 0;
-        imageLayerEl.querySelectorAll('.image-block, .text-block, .scene-block').forEach(el => {
+        imageLayerEl.querySelectorAll('.image-block, .video-block, .text-block, .scene-block').forEach(el => {
           const block = doc.blocks.find(item => item.id === el.dataset.id);
           if (!block) return;
           objectBottom = Math.max(objectBottom, (Number(block.y) || 0) + el.offsetHeight + 170);
@@ -1601,6 +1843,7 @@
             const base = placement || defaultImagePlacement(index);
             newBlocks.push({
               id: uid(), type: 'image', src, alt: file.name, caption: '', width: 45,
+              originalSrc: src, originalAlt: file.name, originalWidth: 45,
               x: Math.max(0, Number(base.x) + index * 22),
               y: Math.max(0, Number(base.y) + index * 22),
               z: topZ + index + 1
@@ -1611,6 +1854,48 @@
           render();
           scheduleSave();
           toast(`${newBlocks.length}개의 이미지를 삽입했습니다.`);
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
+
+      async function videoFileToDataURL(file) {
+        if (!(file.type === 'video/mp4' || /\.mp4$/i.test(file.name || ''))) throw new Error('MP4 파일만 넣을 수 있습니다.');
+        const maxBytes = 80 * 1024 * 1024;
+        if (file.size > maxBytes) throw new Error('안정적인 저장을 위해 MP4 클립은 80MB 이하로 사용해 주세요.');
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('MP4 파일을 읽지 못했습니다.'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function addVideos(files, placement = null) {
+        const valid = [...files].filter(file => file.type === 'video/mp4' || /\.mp4$/i.test(file.name || ''));
+        if (!valid.length) return;
+        try {
+          const topZ = maxImageZ();
+          const newBlocks = [];
+          for (let index = 0; index < valid.length; index++) {
+            const file = valid[index];
+            const src = await videoFileToDataURL(file);
+            const base = placement || defaultImagePlacement(index);
+            newBlocks.push({
+              id: uid(), type: 'video', src, name: file.name,
+              x: Math.max(0, Number(base.x) + index * 24),
+              y: Math.max(0, Number(base.y) + index * 24),
+              width: 420, height: 236, z: topZ + index + 1,
+              originalSrc: src, originalName: file.name, originalWidth: 420, originalHeight: 236,
+              mediaWidth: 420, mediaHeight: 236, mediaOffsetX: 0, mediaOffsetY: 0,
+              muted: true, loop: true
+            });
+          }
+          doc.blocks.splice(insertIndex(), 0, ...newBlocks);
+          selectedId = null;
+          render();
+          scheduleSave();
+          toast(`${newBlocks.length}개의 MP4 클립을 삽입했습니다.`);
         } catch (error) {
           toast(error.message, true);
         }
@@ -1641,7 +1926,7 @@
         if (index < 0) return;
         const copy = clone(doc.blocks[index]);
         copy.id = uid();
-        if (copy.type === 'image' || copy.type === 'text' || copy.type === 'scene') {
+        if (copy.type === 'image' || copy.type === 'video' || copy.type === 'text' || copy.type === 'scene') {
           copy.x = (Number(copy.x) || 0) + 24;
           copy.y = (Number(copy.y) || 0) + 24;
           copy.z = maxImageZ() + 1;
@@ -1894,8 +2179,19 @@
             const dy = moveEvent.clientY - startY;
             let nextWidth = fromLeft ? startWidth - dx : startWidth + dx;
             let nextHeight = fromTop ? startHeight - dy : startHeight + dy;
-            nextWidth = Math.max(120, Math.min(paperEl.clientWidth, nextWidth));
-            nextHeight = Math.max(60, nextHeight);
+            if (moveEvent.shiftKey) {
+              const scaleX = nextWidth / startWidth;
+              const scaleY = nextHeight / startHeight;
+              let scale = Math.abs(scaleX - 1) >= Math.abs(scaleY - 1) ? scaleX : scaleY;
+              const minScale = Math.max(120 / startWidth, 60 / startHeight);
+              const maxScale = Math.min(paperEl.clientWidth / startWidth, 2000 / startHeight);
+              scale = Math.min(maxScale, Math.max(minScale, scale));
+              nextWidth = startWidth * scale;
+              nextHeight = startHeight * scale;
+            } else {
+              nextWidth = Math.max(120, Math.min(paperEl.clientWidth, nextWidth));
+              nextHeight = Math.max(60, nextHeight);
+            }
             block.width = Math.round(nextWidth);
             block.height = Math.round(nextHeight);
             if (fromLeft) block.x = startLeft + (startWidth - nextWidth);
@@ -1955,7 +2251,7 @@
           const handle = document.createElement('button');
           handle.type = 'button';
           handle.className = `text-resize-handle ${corner}`;
-          handle.title = '끌어서 텍스트 상자 크기 조절';
+          handle.title = '끌어서 텍스트 상자 크기 조절 · Shift를 누르면 가로세로 비율 유지';
           handle.setAttribute('aria-label', `${corner} 방향 텍스트 상자 크기 조절`);
           wireTextResize(handle, corner, block, el);
           return handle;
@@ -2098,8 +2394,19 @@
             const dy = moveEvent.clientY - startY;
             let nextWidth = fromLeft ? startWidth - dx : startWidth + dx;
             let nextHeight = fromTop ? startHeight - dy : startHeight + dy;
-            nextWidth = Math.max(180, Math.min(paperEl.clientWidth, nextWidth));
-            nextHeight = Math.max(64, nextHeight);
+            if (moveEvent.shiftKey) {
+              const scaleX = nextWidth / startWidth;
+              const scaleY = nextHeight / startHeight;
+              let scale = Math.abs(scaleX - 1) >= Math.abs(scaleY - 1) ? scaleX : scaleY;
+              const minScale = Math.max(180 / startWidth, 64 / startHeight);
+              const maxScale = Math.min(paperEl.clientWidth / startWidth, 1600 / startHeight);
+              scale = Math.min(maxScale, Math.max(minScale, scale));
+              nextWidth = startWidth * scale;
+              nextHeight = startHeight * scale;
+            } else {
+              nextWidth = Math.max(180, Math.min(paperEl.clientWidth, nextWidth));
+              nextHeight = Math.max(64, nextHeight);
+            }
             block.width = Math.round(nextWidth);
             block.height = Math.round(nextHeight);
             if (fromLeft) block.x = startLeft + (startWidth - nextWidth);
@@ -2164,7 +2471,7 @@
           const handle = document.createElement('button');
           handle.type = 'button';
           handle.className = `scene-resize-handle ${corner}`;
-          handle.title = '끌어서 장면 탭 크기 조절';
+          handle.title = '끌어서 장면 탭 크기 조절 · Shift를 누르면 가로세로 비율 유지';
           handle.setAttribute('aria-label', `${corner} 방향 장면 탭 크기 조절`);
           wireSceneResize(handle, corner, block, el);
           return handle;
@@ -2199,6 +2506,259 @@
 
         stage.append(dragBar, number, title, ...handles);
         el.append(stage, controls);
+        return el;
+      }
+
+      function wireVideoMove(handle, block, el) {
+        handle.addEventListener('pointerdown', event => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+          const startClientX = event.clientX;
+          const startClientY = event.clientY;
+          const startX = Number(block.x) || 0;
+          const startY = Number(block.y) || 0;
+          let moved = false;
+          handle.setPointerCapture?.(event.pointerId);
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startClientX;
+            const dy = moveEvent.clientY - startClientY;
+            if (!moved && Math.hypot(dx, dy) < 2) return;
+            moved = true;
+            document.body.classList.add('moving-video');
+            block.x = startX + dx;
+            block.y = startY + dy;
+            clampVideoPosition(block, el);
+            applyVideoGeometry(block, el);
+            ensurePaperHeight();
+          };
+          const onEnd = endEvent => {
+            handle.releasePointerCapture?.(endEvent.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('moving-video');
+            if (moved) scheduleSave(true);
+          };
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function wireVideoResize(handle, corner, block, el) {
+        handle.addEventListener('pointerdown', event => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectBlock(block.id);
+          handle.setPointerCapture?.(event.pointerId);
+
+          const cropMode = el.classList.contains('crop-mode');
+          document.body.classList.add(cropMode ? 'cropping-video' : 'resizing-video');
+          const startX = event.clientX;
+          const startY = event.clientY;
+          const startLeft = Number(block.x) || 0;
+          const startTop = Number(block.y) || 0;
+          const startWidth = Math.max(48, Number(block.width) || 420);
+          const startHeight = Math.max(32, Number(block.height) || 236);
+          normalizeVideoMediaGeometry(block);
+          const startMediaWidth = Number(block.mediaWidth) || startWidth;
+          const startMediaHeight = Number(block.mediaHeight) || startHeight;
+          const startMediaOffsetX = Number(block.mediaOffsetX) || 0;
+          const startMediaOffsetY = Number(block.mediaOffsetY) || 0;
+          const fromLeft = corner.includes('w');
+          const fromTop = corner.includes('n');
+
+          const mediaPageLeft = startLeft + startMediaOffsetX;
+          const mediaPageTop = startTop + startMediaOffsetY;
+          const mediaPageRight = mediaPageLeft + startMediaWidth;
+          const mediaPageBottom = mediaPageTop + startMediaHeight;
+
+          const onMove = moveEvent => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+
+            if (cropMode) {
+              const minCropWidth = 48;
+              const minCropHeight = 32;
+              let left = startLeft;
+              let top = startTop;
+              let right = startLeft + startWidth;
+              let bottom = startTop + startHeight;
+
+              if (fromLeft) left = Math.min(right - minCropWidth, Math.max(mediaPageLeft, startLeft + dx));
+              else right = Math.max(left + minCropWidth, Math.min(mediaPageRight, startLeft + startWidth + dx));
+              if (fromTop) top = Math.min(bottom - minCropHeight, Math.max(mediaPageTop, startTop + dy));
+              else bottom = Math.max(top + minCropHeight, Math.min(mediaPageBottom, startTop + startHeight + dy));
+
+              block.x = left;
+              block.y = top;
+              block.width = Math.round(right - left);
+              block.height = Math.round(bottom - top);
+              block.mediaWidth = startMediaWidth;
+              block.mediaHeight = startMediaHeight;
+              block.mediaOffsetX = mediaPageLeft - left;
+              block.mediaOffsetY = mediaPageTop - top;
+            } else {
+              let nextWidth = fromLeft ? startWidth - dx : startWidth + dx;
+              let nextHeight = fromTop ? startHeight - dy : startHeight + dy;
+              if (moveEvent.shiftKey) {
+                const scaleX = nextWidth / startWidth;
+                const scaleY = nextHeight / startHeight;
+                let scale = Math.abs(scaleX - 1) >= Math.abs(scaleY - 1) ? scaleX : scaleY;
+                const minScale = Math.max(48 / startWidth, 32 / startHeight);
+                const maxScale = Math.min(paperEl.clientWidth / startWidth, 1200 / startHeight);
+                scale = Math.min(maxScale, Math.max(minScale, scale));
+                nextWidth = startWidth * scale;
+                nextHeight = startHeight * scale;
+              } else {
+                nextWidth = Math.max(48, Math.min(paperEl.clientWidth, nextWidth));
+                nextHeight = Math.max(32, Math.min(1200, nextHeight));
+              }
+
+              const scaleX = nextWidth / startWidth;
+              const scaleY = nextHeight / startHeight;
+              block.width = Math.round(nextWidth);
+              block.height = Math.round(nextHeight);
+              block.mediaWidth = startMediaWidth * scaleX;
+              block.mediaHeight = startMediaHeight * scaleY;
+              block.mediaOffsetX = startMediaOffsetX * scaleX;
+              block.mediaOffsetY = startMediaOffsetY * scaleY;
+              if (fromLeft) block.x = startLeft + (startWidth - nextWidth);
+              if (fromTop) block.y = startTop + (startHeight - nextHeight);
+            }
+
+            clampVideoPosition(block, el);
+            applyVideoGeometry(block, el);
+            ensurePaperHeight();
+          };
+
+          const onEnd = endEvent => {
+            handle.releasePointerCapture?.(endEvent.pointerId);
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onEnd);
+            handle.removeEventListener('pointercancel', onEnd);
+            document.body.classList.remove('resizing-video', 'cropping-video');
+            scheduleSave(true);
+          };
+          handle.addEventListener('pointermove', onMove);
+          handle.addEventListener('pointerup', onEnd);
+          handle.addEventListener('pointercancel', onEnd);
+        });
+      }
+
+      function restoreVideoOriginal(block) {
+        block.src = block.originalSrc || block.src;
+        block.name = block.originalName || block.name || 'MP4 클립';
+        block.width = Math.max(48, Number(block.originalWidth) || 420);
+        block.height = Math.max(32, Number(block.originalHeight) || 236);
+        block.mediaWidth = block.width;
+        block.mediaHeight = block.height;
+        block.mediaOffsetX = 0;
+        block.mediaOffsetY = 0;
+        selectedId = block.id;
+        render();
+        scheduleSave(true);
+      }
+
+      function createVideoBlock(block) {
+        const el = document.createElement('section');
+        el.className = 'block video-block';
+        el.dataset.id = block.id;
+        applyVideoGeometry(block, el);
+        el.addEventListener('pointerdown', event => {
+          if (!event.target.closest('.video-controls-panel, .video-resize-handle, .video-drag-bar')) selectBlock(block.id);
+        });
+
+        const stage = document.createElement('div');
+        stage.className = 'video-stage';
+        const viewport = document.createElement('div');
+        viewport.className = 'video-viewport';
+        const video = document.createElement('video');
+        video.src = block.src;
+        video.controls = true;
+        video.preload = 'metadata';
+        video.playsInline = true;
+        video.muted = block.muted !== false;
+        video.loop = block.loop !== false;
+        video.addEventListener('loadedmetadata', () => requestAnimationFrame(ensurePaperHeight), { once: true });
+        viewport.appendChild(video);
+
+        const dragBar = document.createElement('div');
+        dragBar.className = 'video-drag-bar';
+        dragBar.textContent = '⠿ MP4 이동';
+        wireVideoMove(dragBar, block, el);
+
+        const handles = ['nw','ne','sw','se'].map(corner => {
+          const handle = document.createElement('button');
+          handle.type = 'button';
+          handle.className = `video-resize-handle ${corner}`;
+          handle.title = '파란 손잡이: 크기 조절 · Shift를 누르면 비율 유지 · 크롭 모드에서는 주황 손잡이로 자르기';
+          wireVideoResize(handle, corner, block, el);
+          return handle;
+        });
+
+        const controls = document.createElement('div');
+        controls.className = 'video-controls-panel';
+        controls.addEventListener('pointerdown', event => event.stopPropagation());
+        const title = document.createElement('div');
+        title.className = 'edit-title';
+        title.textContent = `MP4 편집 · ${block.name || '클립'}`;
+        const cropHint = document.createElement('div');
+        cropHint.className = 'video-crop-hint';
+        cropHint.textContent = '크롭을 누르면 모서리 손잡이가 주황색으로 바뀝니다. 그 손잡이를 안쪽으로 끌면 MS Office처럼 원본 영상은 유지한 채 보이는 프레임만 잘립니다.';
+
+        const addSlider = (labelText, min, max, step, value, onInput, suffix='') => {
+          const label = document.createElement('label'); label.textContent = labelText;
+          const range = document.createElement('input'); range.type='range'; range.min=String(min); range.max=String(max); range.step=String(step); range.value=String(value);
+          const number = document.createElement('input'); number.type='number'; number.min=String(min); number.max=String(max); number.step=String(step); number.value=String(value);
+          range.addEventListener('input', () => { number.value=range.value; onInput(Number(range.value), false); });
+          number.addEventListener('input', () => { const v=Math.min(max,Math.max(min,Number(number.value)||min)); range.value=String(v); onInput(v, false); });
+          range.addEventListener('change', () => scheduleSave(true));
+          number.addEventListener('change', () => scheduleSave(true));
+          controls.append(label, range, number);
+          if (suffix) number.title = suffix;
+          return {range, number};
+        };
+
+        const widthCtl = addSlider('너비', 48, Math.max(320, paperEl.clientWidth || 820), 1, Math.max(48, Number(block.width)||420), value => {
+          resizeVideoFrame(block, el, value, block.height);
+        }, 'px');
+        const heightCtl = addSlider('높이', 32, 1200, 1, Math.max(32, Number(block.height)||236), value => {
+          resizeVideoFrame(block, el, block.width, value);
+        }, 'px');
+
+        const buttons = document.createElement('div');
+        buttons.className = 'video-control-buttons';
+        const makeButton = (text, titleText, handler, danger=false) => {
+          const button=document.createElement('button'); button.type='button'; button.className=danger?'btn danger':'btn'; button.style.height='28px'; button.textContent=text; button.title=titleText;
+          button.addEventListener('click', event => { event.stopPropagation(); handler(button); }); return button;
+        };
+        const playBtn = makeButton('재생/일시정지','영상 재생 또는 일시정지', () => video.paused ? video.play().catch(()=>{}) : video.pause());
+        const muteBtn = makeButton(block.muted !== false ? '음소거 해제' : '음소거','음소거 토글', () => { block.muted = !video.muted; video.muted = block.muted; muteBtn.textContent = block.muted ? '음소거 해제' : '음소거'; scheduleSave(true); });
+        const loopBtn = makeButton(block.loop !== false ? '반복 끄기' : '반복 켜기','반복 재생 토글', () => { block.loop = block.loop === false; video.loop=block.loop; loopBtn.textContent=block.loop?'반복 끄기':'반복 켜기'; scheduleSave(true); });
+        const cropBtn = makeButton('크롭','MS Office 방식의 크롭 모드 켜기/끄기', button => {
+          const active = !el.classList.contains('crop-mode');
+          el.classList.toggle('crop-mode', active);
+          button.textContent = active ? '크롭 완료' : '크롭';
+          cropHint.textContent = active
+            ? '크롭 모드: 주황색 모서리를 끌어 보이는 프레임을 자르세요. 원본 영상은 그대로 남아 있습니다.'
+            : '크롭을 누르면 모서리 손잡이가 주황색으로 바뀝니다. 그 손잡이를 안쪽으로 끌면 MS Office처럼 원본 영상은 유지한 채 보이는 프레임만 잘립니다.';
+        });
+        const restoreBtn = makeButton('복원','처음 불러온 영상과 최초 표시 크기로 복원', () => restoreVideoOriginal(block));
+        buttons.append(
+          playBtn, muteBtn, loopBtn, cropBtn, restoreBtn,
+          makeButton('맨 앞으로','다른 오브젝트보다 앞으로',()=>changeImageLayer(block,1)),
+          makeButton('맨 뒤로','다른 오브젝트보다 뒤로',()=>changeImageLayer(block,-1)),
+          makeButton('삭제','MP4 클립 삭제',()=>removeBlock(block.id),true)
+        );
+        controls.prepend(title, cropHint);
+        controls.append(buttons);
+        stage.append(viewport, dragBar, ...handles);
+        el.append(stage, controls);
+        requestAnimationFrame(() => applyVideoGeometry(block, el));
         return el;
       }
 
@@ -2351,12 +2911,20 @@
           });
           picker.click();
         });
+        const restore = makeButton('복원', '처음 불러온 이미지와 최초 표시 크기로 복원', () => {
+          block.src = block.originalSrc || block.src;
+          block.alt = block.originalAlt || block.alt || '스토리보드 이미지';
+          block.width = Math.min(100, Math.max(10, Number(block.originalWidth) || 45));
+          selectedId = block.id;
+          render();
+          scheduleSave(true);
+        });
         const front = makeButton('맨 앞으로', '다른 이미지보다 앞으로', () => changeImageLayer(block, 1));
         const back = makeButton('맨 뒤로', '다른 이미지보다 뒤로', () => changeImageLayer(block, -1));
         const duplicate = makeButton('복제', '이미지 복제', () => duplicateBlock(block.id));
         const remove = makeButton('삭제', '이미지 삭제', () => removeBlock(block.id), true);
 
-        controls.append(editTitle, label, range, value, front, back, replace, duplicate, remove);
+        controls.append(editTitle, label, range, value, front, back, replace, restore, duplicate, remove);
         el.append(stage, controls);
         return el;
       }
@@ -2369,8 +2937,8 @@
           tab.className = 'sheet-tab';
           tab.dataset.sheetId = sheet.id;
           tab.classList.toggle('active', sheet.id === workbook.activeSheetId);
-          tab.textContent = sheet.title || '제목 없는 시트';
-          tab.title = '클릭하여 전환 · 더블클릭하여 이름 변경 · 끌어서 순서 변경';
+          tab.textContent = sheet.title || '제목 없는 시나리오';
+          tab.title = '시나리오 전환 · 더블클릭 이름 변경 · 끌어서 탭 순서 변경';
           tab.draggable = true;
           tab.addEventListener('click', e => {
             clearTimeout(tab._clickTimer);
@@ -2434,6 +3002,8 @@
             layerEl = createSceneBlock(block, sceneNumber);
           } else if (block.type === 'image') {
             layerEl = createImageBlock(block);
+          } else if (block.type === 'video') {
+            layerEl = createVideoBlock(block);
           } else if (block.type === 'text') {
             layerEl = createTextBlock(block);
           }
@@ -2444,12 +3014,15 @@
         renderSheetTabs();
         updateStats();
         requestAnimationFrame(() => {
-          imageLayerEl.querySelectorAll('.image-block, .text-block, .scene-block').forEach(el => {
+          imageLayerEl.querySelectorAll('.image-block, .video-block, .text-block, .scene-block').forEach(el => {
             const block = doc.blocks.find(item => item.id === el.dataset.id);
             if (!block) return;
             if (block.type === 'image') {
               clampImagePosition(block, el);
               applyImageGeometry(block, el);
+            } else if (block.type === 'video') {
+              clampVideoPosition(block, el);
+              applyVideoGeometry(block, el);
             } else if (block.type === 'text') {
               clampTextPosition(block, el);
               applyTextGeometry(block, el);
@@ -2471,13 +3044,15 @@
       function updateStats() {
         const scenes = doc.blocks.filter(b => b.type === 'scene');
         const images = doc.blocks.filter(b => b.type === 'image');
+        const videos = doc.blocks.filter(b => b.type === 'video');
         const text = doc.blocks.map(b => b.type === 'text' ? textFromHTML(b.html) : b.type === 'scene' ? b.title : b.caption).join(' ');
         const chars = text.replace(/\s/g, '').length;
         document.getElementById('wordCount').textContent = chars.toLocaleString('ko-KR');
         document.getElementById('blockCount').textContent = doc.blocks.length.toLocaleString('ko-KR');
         document.getElementById('sceneCount').textContent = scenes.length.toLocaleString('ko-KR');
         document.getElementById('imageCount').textContent = images.length.toLocaleString('ko-KR');
-        documentMeta.textContent = `장면 ${scenes.length}개 · 이미지 ${images.length}개 · 글자 ${chars.toLocaleString('ko-KR')}자 · 시트 ${workbook.sheets.length}개`;
+        document.getElementById('videoCount').textContent = videos.length.toLocaleString('ko-KR');
+        documentMeta.textContent = `장면 ${scenes.length}개 · 이미지 ${images.length}개 · MP4 ${videos.length}개 · 글자 ${chars.toLocaleString('ko-KR')}자 · 시나리오 ${workbook.sheets.length}개`;
         const outline = document.getElementById('outline');
         outline.innerHTML = '';
         if (!scenes.length) {
@@ -2548,7 +3123,7 @@
 
       function exportJSON() {
         downloadBlob(JSON.stringify(workbook, null, 2), 'application/json;charset=utf-8', `${safeFilename(workbook.title)}.storyboard.json`);
-        toast(`${workbook.sheets.length}개 시트를 한 파일로 저장했습니다.`);
+        toast(`${workbook.sheets.length}개 시나리오를 한 파일로 저장했습니다.`);
       }
 
       function sheetReaderBody() {
@@ -2565,6 +3140,17 @@
           if (block.type === 'image') {
             return `<figure class="reader-image" style="left:${Math.max(0, Number(block.x) || 0)}px;top:${Math.max(0, Number(block.y) || 0)}px;width:${Math.min(100, Math.max(10, Number(block.width) || 45))}%;z-index:${Number(block.z) || 1}"><img src="${block.src}" alt="${escapeHTML(block.alt)}"><figcaption>${escapeHTML(block.caption)}</figcaption></figure>`;
           }
+          if (block.type === 'video') {
+            const frameWidth = Math.max(48, Number(block.width) || 420);
+            const frameHeight = Math.max(32, Number(block.height) || 236);
+            const mediaWidth = Math.max(frameWidth, Number(block.mediaWidth) || frameWidth);
+            const mediaHeight = Math.max(frameHeight, Number(block.mediaHeight) || frameHeight);
+            const minOffsetX = Math.min(0, frameWidth - mediaWidth);
+            const minOffsetY = Math.min(0, frameHeight - mediaHeight);
+            const mediaOffsetX = Math.min(0, Math.max(minOffsetX, Number(block.mediaOffsetX) || 0));
+            const mediaOffsetY = Math.min(0, Math.max(minOffsetY, Number(block.mediaOffsetY) || 0));
+            return `<section class="reader-video" style="left:${Math.max(0, Number(block.x) || 0)}px;top:${Math.max(0, Number(block.y) || 0)}px;width:${frameWidth}px;height:${frameHeight}px;z-index:${Number(block.z) || 1}"><div class="reader-video-viewport"><video controls playsinline ${block.muted !== false ? 'muted' : ''} ${block.loop !== false ? 'loop' : ''} src="${block.src}" style="left:${mediaOffsetX}px;top:${mediaOffsetY}px;width:${mediaWidth}px;height:${mediaHeight}px;right:auto;bottom:auto;transform:none;object-position:center center"></video></div></section>`;
+          }
           if (block.type === 'text') {
             return `<section class="reader-text" style="left:${Math.max(0, Number(block.x) || 0)}px;top:${Math.max(0, Number(block.y) || 0)}px;width:${Math.max(120, Number(block.width) || 430)}px;height:${Math.max(60, Number(block.height) || 140)}px;z-index:${Number(block.z) || 1};font-size:${Math.min(96, Math.max(8, Number(block.fontSize) || 16))}px;font-family:${escapeHTML(block.fontFamily || 'inherit')}">${sanitizeHTML(block.html)}</section>`;
           }
@@ -2573,12 +3159,14 @@
       }
 
       function readerPageHeight(sheet) {
-        const objectBottom = sheet.blocks.filter(block => block.type === 'image' || block.type === 'text' || block.type === 'scene').reduce((max, block) => {
+        const objectBottom = sheet.blocks.filter(block => block.type === 'image' || block.type === 'video' || block.type === 'text' || block.type === 'scene').reduce((max, block) => {
           const estimatedHeight = block.type === 'text'
             ? Math.max(60, Number(block.height) || 140)
             : block.type === 'scene'
               ? Math.max(64, Number(block.height) || 92)
-              : 700;
+              : block.type === 'video'
+                ? Math.max(32, Number(block.height) || 236)
+                : 700;
           return Math.max(max, (Number(block.y) || 0) + estimatedHeight);
         }, 0);
         return Math.max(1120, objectBottom + 170);
@@ -2586,13 +3174,13 @@
 
       function buildReaderHTML() {
         const nav = workbook.sheets.map((sheet, index) => `<a href="#sheet-${index + 1}">${escapeHTML(sheet.title)}</a>`).join('');
-        const pages = workbook.sheets.map((sheet, index) => `<main class="page" id="sheet-${index + 1}" style="min-height:${readerPageHeight(sheet)}px"><div class="sheet-label">SHEET ${String(index + 1).padStart(2, '0')}</div><h1>${escapeHTML(sheet.title)}</h1><div class="sheet-content">${sheetReaderBody(sheet)}</div><div class="image-layer">${sheetReaderObjects(sheet)}</div></main>`).join('\n');
-        return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHTML(workbook.title)}</title><style>*{box-sizing:border-box}body{margin:0;background:#efede7;color:#26231e;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif}.project-title{padding:24px;text-align:center;font-size:14px;font-weight:800}.sheet-nav{position:sticky;top:0;z-index:10;display:flex;gap:6px;overflow:auto;padding:8px 16px;background:#fff;border-bottom:1px solid #ddd}.sheet-nav a{padding:7px 11px;border-radius:7px;color:#3858d6;background:#eef1ff;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap}.page{position:relative;width:min(820px,100%);min-height:1120px;margin:30px auto;padding:70px 76px 100px;background:#fff;box-shadow:0 12px 40px #0002;overflow:visible}.sheet-label{position:relative;z-index:1;color:#3858d6;font-size:11px;font-weight:900;letter-spacing:.12em}h1{position:relative;z-index:1;font-size:34px;margin:4px 0 40px}.sheet-content{position:relative;z-index:1}.text{font-size:16px;line-height:1.8;margin:0 0 14px}.scene{margin:24px 0 2px;padding:18px 0 14px;border-top:2px solid;border-bottom:1px solid #ddd}.scene div{font:800 11px system-ui;color:#3858d6;letter-spacing:.12em}.scene h2{margin:5px 0 0;font:800 22px system-ui}.image-layer{position:absolute;inset:0;z-index:6;pointer-events:none}.image-layer .reader-image,.image-layer .reader-text,.image-layer .reader-scene{position:absolute;margin:0}.image-layer .reader-image{min-width:72px;text-align:center}.image-layer .reader-text{min-width:120px;min-height:60px;padding:14px 16px;border-radius:7px;background:rgba(255,255,255,.9);box-shadow:0 2px 12px #0001;overflow:hidden;line-height:1.55}.image-layer .reader-scene{min-width:180px;min-height:64px;padding:14px 18px;border-top:2px solid #26231e;border-bottom:1px solid #ddd;background:linear-gradient(90deg,rgba(56,88,214,.08),rgba(255,255,255,.92) 68%);overflow:hidden}.reader-scene-number{color:#3858d6;font:900 12px/1 system-ui;letter-spacing:.12em}.reader-scene h2{margin:7px 0 0;font:800 22px/1.25 system-ui}.image-layer img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;box-shadow:0 2px 14px #0002}.reader-text p{margin:0 0 .8em}.reader-text p:last-child{margin-bottom:0}.image-layer figcaption{margin-top:8px;color:#777;font:12px/1.5 system-ui}@media(max-width:760px){.page{margin:0;padding:40px 26px;box-shadow:none}.project-title{display:none}}@media print{body{background:#fff}.project-title,.sheet-nav{display:none}.page{margin:0;width:100%;box-shadow:none;break-after:page}.page:last-child{break-after:auto}}</style></head><body><div class="project-title">${escapeHTML(workbook.title)}</div><nav class="sheet-nav">${nav}</nav>${pages}</body></html>`;
+        const pages = workbook.sheets.map((sheet, index) => `<main class="page" id="sheet-${index + 1}" style="min-height:${readerPageHeight(sheet)}px"><div class="sheet-label">SCENARIO ${String(index + 1).padStart(2, '0')}</div><h1>${escapeHTML(sheet.title)}</h1><div class="sheet-content">${sheetReaderBody(sheet)}</div><div class="image-layer">${sheetReaderObjects(sheet)}</div></main>`).join('\n');
+        return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHTML(workbook.title)}</title><style>*{box-sizing:border-box}body{margin:0;background:#efede7;color:#26231e;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif}.project-title{padding:24px;text-align:center;font-size:14px;font-weight:800}.sheet-nav{position:sticky;top:0;z-index:10;display:flex;gap:6px;overflow:auto;padding:8px 16px;background:#fff;border-bottom:1px solid #ddd}.sheet-nav a{padding:7px 11px;border-radius:7px;color:#3858d6;background:#eef1ff;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap}.page{position:relative;width:min(820px,100%);min-height:1120px;margin:30px auto;padding:70px 76px 100px;background:#fff;box-shadow:0 12px 40px #0002;overflow:visible}.sheet-label{position:relative;z-index:1;color:#3858d6;font-size:11px;font-weight:900;letter-spacing:.12em}h1{position:relative;z-index:1;font-size:34px;margin:4px 0 40px}.sheet-content{position:relative;z-index:1}.text{font-size:16px;line-height:1.8;margin:0 0 14px}.scene{margin:24px 0 2px;padding:18px 0 14px;border-top:2px solid;border-bottom:1px solid #ddd}.scene div{font:800 11px system-ui;color:#3858d6;letter-spacing:.12em}.scene h2{margin:5px 0 0;font:800 22px system-ui}.image-layer{position:absolute;inset:0;z-index:6;pointer-events:none}.image-layer .reader-image,.image-layer .reader-video,.image-layer .reader-text,.image-layer .reader-scene{position:absolute;margin:0}.image-layer .reader-image{min-width:72px;text-align:center}.reader-video-viewport{position:relative;width:100%;height:100%;overflow:hidden;border-radius:7px;background:#111}.reader-video-viewport video{position:absolute;object-fit:cover;max-width:none;transform-origin:center}.image-layer .reader-text{min-width:120px;min-height:60px;padding:14px 16px;border-radius:7px;background:rgba(255,255,255,.9);box-shadow:0 2px 12px #0001;overflow:hidden;line-height:1.55}.image-layer .reader-scene{min-width:180px;min-height:64px;padding:14px 18px;border-top:2px solid #26231e;border-bottom:1px solid #ddd;background:linear-gradient(90deg,rgba(56,88,214,.08),rgba(255,255,255,.92) 68%);overflow:hidden}.reader-scene-number{color:#3858d6;font:900 12px/1 system-ui;letter-spacing:.12em}.reader-scene h2{margin:7px 0 0;font:800 22px/1.25 system-ui}.image-layer img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;box-shadow:0 2px 14px #0002}.reader-text p{margin:0 0 .8em}.reader-text p:last-child{margin-bottom:0}.image-layer figcaption{margin-top:8px;color:#777;font:12px/1.5 system-ui}@media(max-width:760px){.page{margin:0;padding:40px 26px;box-shadow:none}.project-title{display:none}}@media print{body{background:#fff}.project-title,.sheet-nav{display:none}.page{margin:0;width:100%;box-shadow:none;break-after:page}.page:last-child{break-after:auto}}</style></head><body><div class="project-title">${escapeHTML(workbook.title)}</div><nav class="sheet-nav">${nav}</nav>${pages}</body></html>`;
       }
 
       function exportHTML() {
         downloadBlob(buildReaderHTML(), 'text/html;charset=utf-8', `${safeFilename(workbook.title)}.html`);
-        toast('모든 시트를 포함한 읽기용 HTML을 저장했습니다.');
+        toast('모든 시나리오를 포함한 읽기용 HTML을 저장했습니다.');
       }
 
       async function importJSON(file) {
@@ -2607,7 +3195,7 @@
           render();
           addHistorySnapshot();
           await dbSet(workbook);
-          toast(`${workbook.sheets.length}개 시트를 불러왔습니다.`);
+          toast(`${workbook.sheets.length}개 시나리오를 불러왔습니다.`);
         } catch (error) {
           toast(error.message || '문서를 불러오지 못했습니다.', true);
         }
@@ -2636,21 +3224,21 @@
       }
 
       function addSheet() {
-        const sheet = createDefaultSheet(uniqueSheetTitle('새 스토리보드'));
+        const sheet = createDefaultSheet(uniqueSheetTitle('새 시나리오'));
         workbook.sheets.push(sheet);
         workbook.activeSheetId = sheet.id;
         doc = sheet;
         selectedId = null;
         render();
         scheduleSave();
-        toast('새 스토리보드 시트를 추가했습니다.');
+        toast('새 시나리오 탭을 추가했습니다.');
       }
 
       function renameCurrentSheet() {
-        const name = prompt('스토리보드 시트 이름을 입력하세요.', doc.title);
+        const name = prompt('시나리오 이름을 입력하세요.', doc.title);
         if (name === null) return;
         const trimmed = name.trim().slice(0, 80);
-        if (!trimmed) return toast('시트 이름은 비워 둘 수 없습니다.', true);
+        if (!trimmed) return toast('시나리오 이름은 비워 둘 수 없습니다.', true);
         doc.title = trimmed;
         documentTitle.textContent = trimmed;
         renderSheetTabs();
@@ -2673,8 +3261,8 @@
       }
 
       function deleteCurrentSheet() {
-        if (workbook.sheets.length <= 1) return toast('프로젝트에는 최소 한 개의 시트가 필요합니다.', true);
-        if (!confirm(`“${doc.title}” 시트를 삭제할까요?`)) return;
+        if (workbook.sheets.length <= 1) return toast('프로젝트에는 최소 한 개의 시나리오가 필요합니다.', true);
+        if (!confirm(`“${doc.title}” 시나리오를 삭제할까요?`)) return;
         const index = workbook.sheets.findIndex(sheet => sheet.id === doc.id);
         workbook.sheets.splice(index, 1);
         const next = workbook.sheets[Math.min(index, workbook.sheets.length - 1)];
@@ -2683,7 +3271,7 @@
         selectedId = null;
         render();
         scheduleSave();
-        toast('시트를 삭제했습니다.');
+        toast('시나리오를 삭제했습니다.');
       }
 
       function switchRelativeSheet(direction) {
@@ -2699,7 +3287,7 @@
       });
 
       documentTitle.contentEditable = 'true';
-      documentTitle.dataset.placeholder = '스토리보드 시트 이름';
+      documentTitle.dataset.placeholder = '시나리오 이름';
       documentTitle.addEventListener('input', () => {
         doc.title = documentTitle.textContent.slice(0, 80);
         const currentTab = sheetTabsEl.querySelector(`.sheet-tab[data-sheet-id="${CSS.escape(doc.id)}"]`);
@@ -2708,7 +3296,7 @@
       });
       documentTitle.addEventListener('blur', () => {
         if (!doc.title.trim()) {
-          doc.title = '제목 없는 스토리보드';
+          doc.title = '제목 없는 시나리오';
           documentTitle.textContent = doc.title;
           renderSheetTabs();
           scheduleSave();
@@ -2722,10 +3310,15 @@
       ['addTextTop','addTextSide'].forEach(id => document.getElementById(id).addEventListener('click', addText));
       ['addSceneTop','addSceneSide'].forEach(id => document.getElementById(id).addEventListener('click', addScene));
       ['addImageTop','addImageSide'].forEach(id => document.getElementById(id).addEventListener('click', requestImage));
+      ['addVideoTop','addVideoSide'].forEach(id => document.getElementById(id).addEventListener('click', requestVideo));
 
       imageInput.addEventListener('change', () => {
         if (imageInput.files?.length) addImages(imageInput.files);
         imageInput.value = '';
+      });
+      videoInput.addEventListener('change', () => {
+        if (videoInput.files?.length) addVideos(videoInput.files);
+        videoInput.value = '';
       });
 
       document.querySelectorAll('.format-command').forEach(button => button.addEventListener('click', () => execFormat(button.dataset.command)));
@@ -2776,18 +3369,21 @@
       });
 
       paperEl.addEventListener('dragover', e => {
-        if ([...(e.dataTransfer?.items || [])].some(item => item.kind === 'file' && item.type.startsWith('image/'))) e.preventDefault();
+        if ([...(e.dataTransfer?.items || [])].some(item => item.kind === 'file' && (item.type.startsWith('image/') || item.type === 'video/mp4'))) e.preventDefault();
       });
       paperEl.addEventListener('drop', e => {
-        const files = [...(e.dataTransfer?.files || [])].filter(file => file.type.startsWith('image/'));
-        if (!files.length || dragId) return;
+        const dropped = [...(e.dataTransfer?.files || [])];
+        const images = dropped.filter(file => file.type.startsWith('image/'));
+        const videos = dropped.filter(file => file.type === 'video/mp4' || /\.mp4$/i.test(file.name || ''));
+        if ((!images.length && !videos.length) || dragId) return;
         e.preventDefault();
         const rect = paperEl.getBoundingClientRect();
         const placement = {
           x: Math.max(0, e.clientX - rect.left - 120),
           y: Math.max(0, e.clientY - rect.top - 80)
         };
-        addImages(files, doc.blocks.length, placement);
+        if (images.length) addImages(images, doc.blocks.length, placement);
+        if (videos.length) addVideos(videos, placement);
       });
 
       document.addEventListener('paste', e => {
